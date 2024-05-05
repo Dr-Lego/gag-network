@@ -1,6 +1,7 @@
 var highlightActive = false;
 var allNodes;
 var network;
+var currentNode = "";
 nodesDataset = new vis.DataSet();
 nodesDataset.add(DATA["nodes"]);
 edges = new vis.DataSet();
@@ -54,7 +55,8 @@ function draw() {
       dom.description.innerHTML = ""
       dom.episodes.innerHTML = ""
       dom.thumbnail.src = "assets/gag-logo.webp"
-      dom.sidebar_data.style.display = "none"
+      dom.sidebar_data.style.display = "none";
+      currentNode = ""
     } else {
       showInfo(node)
     };
@@ -69,9 +71,16 @@ function draw() {
 }
 
 function showInfo(node) {
+  currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
   dom.description.innerHTML = DATA.meta.summary[node.id]
-  dom.thumbnail.src = DATA.meta.thumbnail[node.id]
+  dom.thumbnail.src = DATA.meta.thumbnail[node.id];
+
+  if (DATA.meta.thumbnail[node.id] == "") {
+    dom.cropped_image.style.display = "none"
+  } else {
+    dom.cropped_image.style.display = "block"
+  }
   dom.cropped_image.style.maxHeight = '25%'
   dom.connections_to.innerHTML = ""
   dom.connections_from.innerHTML = ""
@@ -120,6 +129,12 @@ function showInfo(node) {
   if (connections_from.length == 0) { dom.connections_from_section.style.display = "none" }
 
   dom.connections_number.innerText = `(${Array.from(new Set(connections_to.concat(connections_from))).length})`
+
+  // edge event listener
+  $(".connection").click(function () {
+    console.log("test");
+    focus_edge(currentNode, this.innerText)
+  })
 }
 
 function search(elem) {
@@ -177,6 +192,38 @@ function focus_node(node) {
   network.moveTo({
     position: network.getPositions()[node],
     scale: 1.5,
+    animation: {
+      duration: 400,
+      easingFunction: "easeInOutQuad"
+    }
+  });
+}
+
+function averagePos(a, b) {
+  positions = network.getPositions()
+  a = positions[a]
+  b = positions[b]
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+}
+
+function nodeDistance(a, b) {
+  positions = network.getPositions()
+  a = positions[a]
+  b = positions[b]
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+}
+
+function focus_edge(a, b) {
+  edge = DATA["edges"].filter(
+    edge => [a, b].sort().toString() == [edge.to, edge.from].sort().toString()
+  )[0].id;
+  network.selectEdges([edge])
+
+  scale = -0.000366703337 * nodeDistance(a, b) + 1.383498349835
+
+  network.moveTo({
+    position: averagePos(a, b),
+    scale: scale,
     animation: {
       duration: 400,
       easingFunction: "easeInOutQuad"

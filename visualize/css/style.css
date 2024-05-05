@@ -88,7 +88,7 @@ body {
 
 
 #sidebar {
-    height: 100%;
+    height: calc(100% - 58px);
     width: calc(100% - 20px);
     padding-left: 10px;
     padding-right: 10px;
@@ -153,6 +153,12 @@ hr {
     text-decoration: none;
     display: block;
     margin: 5px;
+    transition: all 0.15s ease-in-out;
+}
+
+.episode-link:hover {
+    color: #d34823;
+    font-weight: bold;
 }
 
 .connections-wrapper {
@@ -181,6 +187,11 @@ hr {
     width: fit-content;
     text-wrap: nowrap;
     cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.connection:hover {
+    color: #d34823;
 }
 
 #search {
