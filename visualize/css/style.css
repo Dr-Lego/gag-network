@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+html,
+body {
+    font-size: 11pt;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
+
+#network {
+    width: 100%;
+    height: 100%;
+}
+
+#logo {
+    position: absolute;
+    z-index: 5;
+    bottom: 20px;
+    left: 20px;
+    width: 75px;
+    height: 75px;
+    border-radius: 10px;
+    opacity: 0.5;
+    transition: 0.3s;
+}
+
+#logo:hover {
+    opacity: 1;
+}
+
+#loading-container {
+    position: absolute;
+    z-index: 10;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: white;
+    transition: opacity 0.5s;
+}
+
+.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#loading {
+    position: absolute;
+    top: 40%;
+    font-size: 48pt;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+
+#comment {
+    position: absolute;
+    top: 55%;
+    font-size: 20pt;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
+    width: 100%;
+    text-align: center;
+    color: lightgray;
+    font-style: italic;
+}
+
+.small {
+    color: lightgrey;
+    font-weight: normal;
+    margin-left: 10px;
+    font-size: 80%;
+}
+
+#sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 20%;
+    background: white;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-left: 2px solid rgb(240, 240, 240);
+    overflow: auto;
+    box-shadow: 10px 0px 20px 0px grey;
+}
+
+hr {
+    color: rgb(240, 240, 240);
+}
+
+#title {
+    margin: 10px;
+    margin-top: 20px;
+}
+
+#title>a {
+    color: rgba(0, 0, 0, 1);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+#title>a:hover {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+#episodes-wrapper {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgb(245, 245, 245);
+    border-radius: 10px;
+    margin: 10px;
+}
+
+
+.episode-index {
+    color: grey;
+    margin-right: 8px;
+}
+
+#description {
+    margin: 10px;
+    margin-top: 0;
+    color: grey;
+}
+
+#thumbnail {
+    width: 100%;
+}
+
+.cropped-image {
+    margin: -10px;
+    max-height: 25%;
+    width: calc(100% + 20px);
+    overflow: hidden;
+    transition: height 0.5 ease-in-out;
+}
+
+.episode-link {
+    color: black;
+    text-decoration: none;
+    display: block;
+    margin: 5px;
+}
+
+.connections-wrapper {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: row;
+    margin: 10px;
+    margin-left: 5px;
+}
+
+#connections-from-section {
+ margin-bottom: 30px;
+}
+
+.connection {
+    color: black;
+    text-decoration: none;
+    margin: 5px;
+    padding: 8px;
+    border-radius: 5px;
+    background-color: rgb(245, 245, 245);
+    width: fit-content;
+    text-wrap: nowrap;
+    cursor: pointer;
+}
+
+#search {
+    position: absolute;
+    top: 0;
+    right: 40%;
+    height: 24pt;
+    width: 20%;
+    background: white;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    /* iOS Safari */
+    -webkit-user-select: none;
+    /* Safari */
+    -khtml-user-select: none;
+    /* Konqueror HTML */
+    -moz-user-select: none;
+    /* Old versions of Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+h2, h3 {
+    margin: 10px;
+    margin-top: 20px;
+}
+
+#sidebar-data{
+    display: none
+}

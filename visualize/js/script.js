@@ -1,0 +1,174 @@
+var highlightActive = false;
+var allNodes;
+var network;
+nodesDataset = new vis.DataSet();
+nodesDataset.add(DATA["nodes"]);
+edges = new vis.DataSet();
+edges.add(DATA["edges"]);
+console.log("test")
+
+const dom = {
+  "title": document.getElementById("title"),
+  "description": document.getElementById("description"),
+  "episodes": document.getElementById("episodes"),
+  "thumbnail": document.getElementById("thumbnail"),
+  "cropped_image": document.getElementById("cropped-image"),
+  "connections_to": document.getElementById("connections-to-wrapper"),
+  "connections_from": document.getElementById("connections-from-wrapper"),
+  "connections_to_section": document.getElementById("connections-to-section"),
+  "connections_from_section": document.getElementById("connections-from-section"),
+  "sidebar_data": document.getElementById("sidebar-data"),
+  "connections_number": document.getElementById("connections-number"),
+  "episodes_number": document.getElementById("episodes-number")
+}
+
+console.log(dom.title)
+
+function draw() {
+  // create a network
+  var container = document.getElementById("network");
+  var data = {
+    nodes: nodesDataset,
+    edges: edges,
+  };
+  //var data = { nodes: getNodeData(SAVE), edges: getEdgeData(SAVE) };
+  //data = importNetwork(SAVE)
+  console.log("imported")
+  network = new vis.Network(container, data, options);
+
+  network.stabilize(1000)
+
+  network.on("stabilizationProgress", function (params) {
+    document.getElementById('loading').innerText = `${Math.round((params.iterations / params.total) * 100).toString()}%`
+  });
+  network.on("stabilizationIterationsDone", function () {
+    document.body.removeAttribute("style")
+    document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
+  });
+  network.on('click', function (properties) {
+    let node = nodesDataset.get(properties.nodes[0]);
+    if (node.id == undefined) {
+      dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
+      dom.description.innerHTML = ""
+      dom.episodes.innerHTML = ""
+      dom.thumbnail.src = "assets/gag-logo.webp",
+        dom.sidebar_data.style.display = "none"
+    } else {
+      dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
+      dom.description.innerHTML = DATA.meta.summary[node.id]
+      dom.thumbnail.src = DATA.meta.thumbnail[node.id]
+      dom.cropped_image.style.maxHeight = '25%'
+      dom.connections_to.innerHTML = ""
+      dom.connections_from.innerHTML = ""
+      dom.sidebar_data.style.display = "block"
+      episode_display = []
+      for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
+        const episode = DATA.meta.episodes[node.id][i];
+        episode_display.push(`<a class="episode-link" href=${JSON.parse(episode.links.replaceAll("'", '"'))[0]} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
+      };
+      dom.episodes.innerHTML = episode_display.join("");
+      dom.episodes_number.innerText = `(${episode_display.length})`
+
+      dom.connections_to_section.style.display = "block"
+      dom.connections_from_section.style.display = "block"
+
+      // connections to
+      let connections_to = DATA["edges"].filter(
+        edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
+      ).map(
+        function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
+      );
+
+      for (let i = 0; i < connections_to.length; i++) {
+        const conn = document.createElement("span")
+        conn.className = "connection";
+        conn.innerText = connections_to[i];
+        dom.connections_to.appendChild(conn)
+      };
+
+      if (connections_to.length == 0) { dom.connections_to_section.style.display = "none" }
+
+      // connections from
+      let connections_from = DATA["edges"].filter(
+        edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
+      ).map(
+        function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
+      );
+
+      for (let i = 0; i < connections_from.length; i++) {
+        const conn = document.createElement("span")
+        conn.className = "connection";
+        conn.innerText = connections_from[i];
+        dom.connections_from.appendChild(conn)
+      };
+
+      if (connections_from.length == 0) { dom.connections_from_section.style.display = "none" }
+
+      dom.connections_number.innerText = `(${Array.from(new Set(connections_to.concat(connections_from))).length})`
+    };
+
+
+
+  });
+  $(function () {
+    $("#search").autocomplete({
+      source: Object.keys(nodesDataset._data)
+    });
+  });
+}
+
+function imageAnimate() {
+  if (dom.cropped_image.style.maxHeight == '25%') {
+    dom.cropped_image.style.maxHeight = '100%';
+  } else {
+    dom.cropped_image.style.maxHeight = '25%'
+  }
+}
+
+
+function exportNetwork() {
+  var _nodes = objectToarrows_to(network.getPositions());
+  var _edges = Object.values(edges._data)
+  console.log(JSON.stringify({ "nodes": _nodes, "edges": _edges }, undefined, 2))
+}
+
+function importNetwork(save) {
+  return {
+    nodes: getNodeData(save.nodes),
+    edges: new vis.DataSet(save.edges),
+  }
+}
+
+function objectToarrows_to(obj) {
+  return Object.keys(obj).map(function (key) { obj[key].id = key; return obj[key] });
+}
+
+
+function getNodeData(data) {
+  var networkNodes = [];
+
+  data.forEach(function (elem, index) {
+    networkNodes.push({
+      id: elem.id,
+      label: elem.id,
+      x: elem.x,
+      y: elem.y,
+    });
+  });
+
+  return new vis.DataSet(networkNodes);
+}
+
+function focus(node) {
+  network.moveTo({
+    position: network.getPositions()[node],
+    scale: 1.5,
+    animation: {
+      duration: 500,
+      easingFunction: "easeInOutQuad"
+    }
+  });
+}
+
+
+draw()

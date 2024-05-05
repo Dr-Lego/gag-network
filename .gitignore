@@ -1,0 +1,4 @@
+token.secret
+data/dump
+data/backup
+scraping/__pycache__
