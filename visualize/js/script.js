@@ -19,10 +19,11 @@ const dom = {
   "connections_from_section": document.getElementById("connections-from-section"),
   "sidebar_data": document.getElementById("sidebar-data"),
   "connections_number": document.getElementById("connections-number"),
-  "episodes_number": document.getElementById("episodes-number")
+  "episodes_number": document.getElementById("episodes-number"),
+  "search": document.getElementById("search"),
+  "search_suggestions": document.getElementById("search-suggestions")
 }
 
-console.log(dom.title)
 
 function draw() {
   // create a network
@@ -46,75 +47,88 @@ function draw() {
     document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
   });
   network.on('click', function (properties) {
+    document.activeElement.blur()
     let node = nodesDataset.get(properties.nodes[0]);
     if (node.id == undefined) {
       dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
       dom.description.innerHTML = ""
       dom.episodes.innerHTML = ""
-      dom.thumbnail.src = "assets/gag-logo.webp",
-        dom.sidebar_data.style.display = "none"
+      dom.thumbnail.src = "assets/gag-logo.webp"
+      dom.sidebar_data.style.display = "none"
     } else {
-      dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
-      dom.description.innerHTML = DATA.meta.summary[node.id]
-      dom.thumbnail.src = DATA.meta.thumbnail[node.id]
-      dom.cropped_image.style.maxHeight = '25%'
-      dom.connections_to.innerHTML = ""
-      dom.connections_from.innerHTML = ""
-      dom.sidebar_data.style.display = "block"
-      episode_display = []
-      for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
-        const episode = DATA.meta.episodes[node.id][i];
-        episode_display.push(`<a class="episode-link" href=${JSON.parse(episode.links.replaceAll("'", '"'))[0]} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
-      };
-      dom.episodes.innerHTML = episode_display.join("");
-      dom.episodes_number.innerText = `(${episode_display.length})`
-
-      dom.connections_to_section.style.display = "block"
-      dom.connections_from_section.style.display = "block"
-
-      // connections to
-      let connections_to = DATA["edges"].filter(
-        edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
-      ).map(
-        function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
-      );
-
-      for (let i = 0; i < connections_to.length; i++) {
-        const conn = document.createElement("span")
-        conn.className = "connection";
-        conn.innerText = connections_to[i];
-        dom.connections_to.appendChild(conn)
-      };
-
-      if (connections_to.length == 0) { dom.connections_to_section.style.display = "none" }
-
-      // connections from
-      let connections_from = DATA["edges"].filter(
-        edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
-      ).map(
-        function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
-      );
-
-      for (let i = 0; i < connections_from.length; i++) {
-        const conn = document.createElement("span")
-        conn.className = "connection";
-        conn.innerText = connections_from[i];
-        dom.connections_from.appendChild(conn)
-      };
-
-      if (connections_from.length == 0) { dom.connections_from_section.style.display = "none" }
-
-      dom.connections_number.innerText = `(${Array.from(new Set(connections_to.concat(connections_from))).length})`
+      showInfo(node)
     };
-
-
-
   });
-  $(function () {
-    $("#search").autocomplete({
-      source: Object.keys(nodesDataset._data)
-    });
+
+  // search
+  Object.keys(nodesDataset._data).sort().forEach(function (item) {
+    const option = document.createElement('option');
+    option.setAttribute('value', item);
+    dom.search_suggestions.appendChild(option);
   });
+}
+
+function showInfo(node) {
+  dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
+  dom.description.innerHTML = DATA.meta.summary[node.id]
+  dom.thumbnail.src = DATA.meta.thumbnail[node.id]
+  dom.cropped_image.style.maxHeight = '25%'
+  dom.connections_to.innerHTML = ""
+  dom.connections_from.innerHTML = ""
+  dom.sidebar_data.style.display = "block"
+  episode_display = []
+  for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
+    const episode = DATA.meta.episodes[node.id][i];
+    episode_display.push(`<a class="episode-link" href=${JSON.parse(episode.links.replaceAll("'", '"'))[0]} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
+  };
+  dom.episodes.innerHTML = episode_display.join("");
+  dom.episodes_number.innerText = `(${episode_display.length})`
+
+  dom.connections_to_section.style.display = "block"
+  dom.connections_from_section.style.display = "block"
+
+  // connections to
+  let connections_to = DATA["edges"].filter(
+    edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
+  ).map(
+    function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
+  );
+
+  for (let i = 0; i < connections_to.length; i++) {
+    const conn = document.createElement("span")
+    conn.className = "connection";
+    conn.innerText = connections_to[i];
+    dom.connections_to.appendChild(conn)
+  };
+
+  if (connections_to.length == 0) { dom.connections_to_section.style.display = "none" }
+
+  // connections from
+  let connections_from = DATA["edges"].filter(
+    edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
+  ).map(
+    function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
+  );
+
+  for (let i = 0; i < connections_from.length; i++) {
+    const conn = document.createElement("span")
+    conn.className = "connection";
+    conn.innerText = connections_from[i];
+    dom.connections_from.appendChild(conn)
+  };
+
+  if (connections_from.length == 0) { dom.connections_from_section.style.display = "none" }
+
+  dom.connections_number.innerText = `(${Array.from(new Set(connections_to.concat(connections_from))).length})`
+}
+
+function search(elem) {
+  if (event.key === 'Enter') {
+    document.activeElement.blur()
+    showInfo(nodesDataset.get(elem.value));
+    network.selectNodes([elem.value])
+    focus_node(elem.value);
+  }
 }
 
 function imageAnimate() {
@@ -159,12 +173,12 @@ function getNodeData(data) {
   return new vis.DataSet(networkNodes);
 }
 
-function focus(node) {
+function focus_node(node) {
   network.moveTo({
     position: network.getPositions()[node],
     scale: 1.5,
     animation: {
-      duration: 500,
+      duration: 400,
       easingFunction: "easeInOutQuad"
     }
   });

@@ -1,6 +1,4 @@
-<!DOCTYPE html>
 <html lang="en">
-<html>
 
 <head>
   <meta charset="utf-8">
@@ -25,34 +23,43 @@
   <div id="network"></div>
   <a href="https://www.geschichte.fm/"><img id="logo" src="assets/podcast-cover.jpg"></a>
 
-  <input type="text" id="search"></input>
+  <section id="sidebar-wrapper">
+    <input type="text" id="search" list="search-suggestions" spellcheck="false" placeholder="Finde ein Thema..."
+      onkeydown="search(this)">
+    <datalist id="search-suggestions"></datalist>
 
-  <div id="sidebar">
-    <div class="cropped-image" id="cropped-image" style="max-height: 100%;" onmousedown="imageAnimate()">
-      <img id="thumbnail" src="assets/gag-logo.webp">
+    <div id="sidebar">
+      <div class="cropped-image" id="cropped-image" style="max-height: 100%;" onmousedown="imageAnimate()">
+        <img id="thumbnail" src="assets/gag-logo.webp">
+      </div>
+      <h1 id="title">Geschichten aus der Geschichten<br>»Flickenteppich«</h1>
+      <p id="description"></p>
+      <div id="sidebar-data">
+        <h2>Episoden<span class="small" id="episodes-number"></span></h2>
+        <div id="episodes-wrapper">
+          <div id="episodes"></div>
+        </div>
+
+        <h2>Verbindungen<span class="small" id="connections-number"></span></h2>
+        <div id="connections-to-section" style="display: block;">
+          <h3>...zu anderen Themen:</h3>
+          <div class="connections-wrapper" id="connections-to-wrapper"></div>
+        </div>
+
+        <div id="connections-from-section" style="display: block;">
+          <h3>...von anderen Themen:</h3>
+          <div class="connections-wrapper" id="connections-from-wrapper">
+          </div>
+        </div>
+      </div>
+
     </div>
-    <h1 id="title">Geschichten aus der Geschichten<br>»Flickenteppich«</h1>
-    <p id="description"></p>
-    <div id="sidebar-data">
-      <h2>Episoden<span class="small" id="episodes-number"></span></h2>
-      <div id="episodes-wrapper">
-        <div id="episodes"></div>
-      </div>
-      <h2>Verbindungen<span class="small" id="connections-number"></span></h2>
-      <div id="connections-to-section">
-        <h3>...zu anderen Themen:</h3>
-        <div class="connections-wrapper" id="connections-to-wrapper"></div>
-      </div>
+  </section>
 
-      <div id="connections-from-section">
-        <h3>...von anderen Themen:</h3>
-        <div class="connections-wrapper" id="connections-from-wrapper"></div>
-      </div>
-    </div>
-
-  </div>
 
   <script src="js/script.js"></script>
+
+
 </body>
 
 </html>

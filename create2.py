@@ -30,7 +30,7 @@ db = Database()
 link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
       SELECT DISTINCT url FROM links
       WHERE url IN (SELECT title FROM articles)
-      GROUP BY url having count(url) <= 1)"""
+      GROUP BY url having count(url) <= 200)"""
 
 links = pd.read_sql(link_filter, con=db.conn)
 titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
