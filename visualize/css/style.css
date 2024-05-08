@@ -97,6 +97,26 @@ body {
     overflow: hidden auto;
 }
 
+#info {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 20%;
+    opacity: 0;
+    height: fit-content;
+    cursor: default;
+    box-shadow: grey 0px 0px 15px -5px;
+    background: white;
+    overflow: hidden auto;
+    padding: 15px;
+    border-top-right-radius: 2em;
+    transition: all 0.4s ease-in-out;
+}
+
+#info:hover{
+    opacity: 0.5 !important;
+}
+
 hr {
     color: rgb(240, 240, 240);
 }
@@ -110,12 +130,14 @@ hr {
 #title>a {
     color: rgba(0, 0, 0, 1);
     text-decoration: none;
-    transition: color 0.2s;
 }
 
 #title>a:hover {
-    color: rgba(0, 0, 0, 0.5);
+    /* color: rgba(0, 0, 0, 0.5); */
+    color: #d34823;
+    text-decoration: underline;
 }
+
 
 #episodes-wrapper {
     margin-top: 20px;
@@ -153,12 +175,12 @@ hr {
     text-decoration: none;
     display: block;
     margin: 5px;
-    transition: all 0.15s ease-in-out;
+    /* transition: all 0.15s ease-in-out; */
 }
 
 .episode-link:hover {
     color: #d34823;
-    font-weight: bold;
+    text-decoration: underline;
 }
 
 .connections-wrapper {
@@ -174,7 +196,7 @@ hr {
 }
 
 #connections-from-section {
- margin-bottom: 30px;
+    margin-bottom: 30px;
 }
 
 .connection {
@@ -223,11 +245,21 @@ hr {
                                     supported by Chrome, Edge, Opera and Firefox */
 }
 
-h2, h3 {
+h2,
+h3 {
     margin: 10px;
     margin-top: 20px;
 }
 
-#sidebar-data{
+#context-title {
+    margin: 0 !important;
+    margin-bottom: 10px;
+}
+
+#sidebar-data {
     display: none
+}
+
+.highlighted {
+    background: yellow;
 }

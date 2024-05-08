@@ -12,6 +12,7 @@
   <script src="data/options.js"></script>
   <script src="js/vis.min.js.js"></script>
   <script src="js/jquery-3.7.1.min.js.js"></script>
+  <script src="https://unpkg.com/compromise"></script>
 </head>
 
 <body style="cursor: wait">
@@ -21,7 +22,7 @@
   </div>
 
   <div id="network"></div>
-  <a href="https://www.geschichte.fm/"><img id="logo" src="assets/podcast-cover.jpg"></a>
+  <!-- <a href="https://www.geschichte.fm/"><img id="logo" src="assets/podcast-cover.jpg"></a> -->
 
   <section id="sidebar-wrapper">
     <input type="text" id="search" list="search-suggestions" spellcheck="false" placeholder="Finde ein Thema..."
@@ -52,10 +53,13 @@
           </div>
         </div>
       </div>
-
     </div>
   </section>
 
+  <div id="info">
+    <h3 id="context-title"></h3>
+    <p id="context"></p>
+  </div>
 
   <script src="js/script.js"></script>
 

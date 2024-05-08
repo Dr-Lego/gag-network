@@ -6,7 +6,6 @@ nodesDataset = new vis.DataSet();
 nodesDataset.add(DATA["nodes"]);
 edges = new vis.DataSet();
 edges.add(DATA["edges"]);
-console.log("test")
 
 const dom = {
   "title": document.getElementById("title"),
@@ -22,7 +21,10 @@ const dom = {
   "connections_number": document.getElementById("connections-number"),
   "episodes_number": document.getElementById("episodes-number"),
   "search": document.getElementById("search"),
-  "search_suggestions": document.getElementById("search-suggestions")
+  "search_suggestions": document.getElementById("search-suggestions"),
+  "context": document.getElementById("context"),
+  "context_title": document.getElementById("context-title"),
+  "info": document.getElementById("info")
 }
 
 
@@ -35,7 +37,6 @@ function draw() {
   };
   //var data = { nodes: getNodeData(SAVE), edges: getEdgeData(SAVE) };
   //data = importNetwork(SAVE)
-  console.log("imported")
   network = new vis.Network(container, data, options);
 
   network.stabilize(1000)
@@ -56,6 +57,7 @@ function draw() {
       dom.episodes.innerHTML = ""
       dom.thumbnail.src = "assets/gag-logo.webp"
       dom.sidebar_data.style.display = "none";
+      dom.info.style.opacity = 0
       currentNode = ""
     } else {
       showInfo(node)
@@ -96,12 +98,14 @@ function showInfo(node) {
   dom.connections_to_section.style.display = "block"
   dom.connections_from_section.style.display = "block"
 
+  dom.info.style.opacity = 0
+  
   // connections to
   let connections_to = DATA["edges"].filter(
     edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
-  );
+  ).sort();
 
   for (let i = 0; i < connections_to.length; i++) {
     const conn = document.createElement("span")
@@ -117,7 +121,7 @@ function showInfo(node) {
     edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
-  );
+  ).sort();
 
   for (let i = 0; i < connections_from.length; i++) {
     const conn = document.createElement("span")
@@ -132,8 +136,31 @@ function showInfo(node) {
 
   // edge event listener
   $(".connection").click(function () {
-    console.log("test");
-    focus_edge(currentNode, this.innerText)
+    let a; let b;
+    if(this.parentElement.id.includes("to")){
+      a = currentNode; b = this.innerText;
+    }else{
+      a = this.innerText; b = currentNode; 
+    }
+    focus_edge(a, b);
+    let text = DATA.meta.text[a]
+    let link_text = DATA.meta.links[`${a} -> ${b}`]
+    let text_index = text.search(link_text)
+    let context = text.substring(Math.max(0, text_index-400), Math.min(text.length-1, text_index+400)) // get context of word
+    let sentences = nlp(context).sentences().json()
+    context = []
+    for (let i = 1; i < sentences.length-1; i++) {
+      const sent = sentences[i];
+      if(!sent.text.startsWith("==") && !sent.text.endsWith("==")){
+        context.push(sent.text)
+      }
+    };
+    context = context.join(" ")
+    context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
+    context = context.replaceAll("\n", "<br>")
+    dom.context.innerHTML = context
+    dom.context_title.innerText = `${a} > ${b}`
+    dom.info.style.opacity = 1
   })
 }
 
@@ -188,6 +215,12 @@ function getNodeData(data) {
   return new vis.DataSet(networkNodes);
 }
 
+function context(a, b) {
+  let text = DATA.meta.text[a]
+  let link = DATA.meta.links[b]
+
+}
+
 function focus_node(node) {
   network.moveTo({
     position: network.getPositions()[node],
@@ -219,7 +252,7 @@ function focus_edge(a, b) {
   )[0].id;
   network.selectEdges([edge])
 
-  scale = -0.000366703337 * nodeDistance(a, b) + 1.383498349835
+  scale = Math.max(0.25, -0.000366703337 * nodeDistance(a, b) + 1.383498349835)
 
   network.moveTo({
     position: averagePos(a, b),

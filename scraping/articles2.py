@@ -113,7 +113,6 @@ def scrape_articles(db=Iterable, mode: Literal["update", "refresh"] = "update") 
             api_call: dict = json.loads(requests.get(
                 "https://de.wikipedia.org/api/rest_v1/page/summary/" + key,
                 headers= {
-                    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJjYzZmOGE2MmVkYWE0NmM1NGY0ZjZkNjVjNzIyZmZhZiIsImp0aSI6IjJjYzE4NjE0NzAxZDBhYWRjZDAwYmEyMGUxZTdkZTYwNjI0OTM1MmIzNjhiNjZmZjFlMTNkZTlhZGE3MzI1ZTdmMjFhNWExZDZkOTUwNjQ4IiwiaWF0IjoxNzEzNzA2MjU2LjgxNTQ3LCJuYmYiOjE3MTM3MDYyNTYuODE1NDc0LCJleHAiOjMzMjcwNjE1MDU2LjgxMzk0Niwic3ViIjoiNzU0Nzk5ODkiLCJpc3MiOiJodHRwczovL21ldGEud2lraW1lZGlhLm9yZyIsInJhdGVsaW1pdCI6eyJyZXF1ZXN0c19wZXJfdW5pdCI6NTAwMCwidW5pdCI6IkhPVVIifSwic2NvcGVzIjpbImJhc2ljIl19.Ig8lvCrcqivVJMju7794yq3HrTtI3ocVTGAXB71XZZYnd9SmZeHGjuTKWSh9uF2cJgG_jIoSVNa3HAYBY2XAJrwR6FQnHuqsQ6xrKs5VBGVc0Lopsjv0rck-g81F8nCu5aNqPgCmeU0uLFxqlYT58k_64PBehOvpSeu8O605tmx5WTf4u2AinCMfeHXI2aSv7h-f7PwDDvmaQrOMSVp04Ty0OuY5mDoQPA-LT29lBcRMC79-uGe03YEtHjFbqfGM1ALOATc7VTWA2-XoV47ZulwvE0OJZGphbAUnE6zoYBLpXNH_LALRyhB9yukm4kcW4rWvGzhgAQrCHesAEK7ZDdhi1C7EF6Q_oyH_I_Zx0r-LbkXGanq47Uu1ErQWNMd2IN45bCKIg887FYAOhSwJtgEuVEKuyskW2RZN3-psz2gXlbz35CgZ68paogGW8kj6Yu0L-sz-_P8GGeNyYu4ncvOcckDjUowR7jbli77aj6Yjr3nZabAXtIzShOTIZ-uA85JzRtYhkT29j5goYvN2gYZGLvTIYqT8vykoUT4r4H08QCLIFQCbA0jXSCuN0RqgQfUj6uwtAoMXe3T7NKAkW12ghNqUmsjYwfm_XTMwUxf5s9PeultFPWdYX3qTJ_lZ8iZ2VCXvGdWaMBEwXVT3_LWR6dRzMLrek2qTFRX2bhU',
                     'User-Agent': 'GAG-Mining (Dr_Lego@ist-einmalig.de)'
                 }
             ).text)

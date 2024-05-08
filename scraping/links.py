@@ -1,7 +1,26 @@
 import wikitextparser as wtp
 import pandas as pd
 import sqlite3
+import json
 from _Database import Database
+
+
+def context(text) -> dict:
+    refs = wtp.parse(text).get_tags("ref")
+    for ref in refs:
+        text = text.replace(str(ref), "")
+    wikitext = wtp.parse(text)
+    # if not len(links):
+    #     links = [a.target for a in wikitext.wikilinks]
+    contexts = {}
+    for s in wikitext.sections:
+        text = s.plain_text()
+        #results = s.wikilinks#[a for a in s.wikilinks if a.target in links]
+        for link in s.wikilinks:
+            #.replace(link.plain_text(), f"[[{link.plain_text()}]]")
+            #text = "\n".join([l for l in text.split("\n") if not l.startswith("==") and not l.endswith("==")])
+            contexts[link.target] = contexts.get(link.target, []) + [text]
+    return {"parsed": wikitext, "contexts": contexts}
 
 
 def scrape_links(con:sqlite3.Connection):
@@ -10,17 +29,19 @@ def scrape_links(con:sqlite3.Connection):
 
 
     for i, article in articles.iterrows():
-        try:
-            for a in wtp.parse(article["content"]).wikilinks:
-                links.append({
-                    "url": a.target,
-                    "text": a.text if a.text else a.target,
-                    "parent": article["title"],
-                    "wikitext": str(a)
-                })
-            #print(f"{i+1}  {article['title']}")
-        except:
-            print("\033[91m", f"{i+1}  {article['title']}", "\033[0m")
+        #try:
+        #parsed, contexts = list(context(article["content"]).values())
+        parsed = wtp.parse(article["content"])
+        for a in parsed.wikilinks:
+            links.append({
+                "url": a.target,
+                "text": a.text if a.text else a.target,
+                "parent": article["title"],
+                "wikitext": str(a),
+                #"context": json.dumps(contexts[a.target])
+            })
+        # except:
+        #     print("\033[91m", f"{i+1}  {article['title']}", "\033[0m")
 
 
 

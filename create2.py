@@ -2,7 +2,9 @@ from scraping._Database import Database
 import pandas as pd
 import itertools
 import json
+import numpy as np
 import wikitextparser as wtp
+import re
 
 edges: list
 nodes: list
@@ -33,6 +35,7 @@ link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
       GROUP BY url having count(url) <= 200)"""
 
 links = pd.read_sql(link_filter, con=db.conn)
+all_links = pd.read_sql("SELECT * FROM links", con=db.conn)
 titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
 articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
 episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
@@ -75,11 +78,15 @@ def get_nodes() -> list:
 
 
 def get_metadata() -> dict:
-    meta = {"episodes": {}, "summary":{}, "thumbnail": {}}
+    meta = {"episodes": {}, "summary":{}, "thumbnail": {}, "text": {}, "links": {}}
     for i, t in articles.iterrows():
         meta["episodes"][t.title] = meta["episodes"].get(t.title, []) + [{k:list(v.values())[0] for k, v in episodes.loc[episodes["nr"] == t.episode].to_dict().items()}]
         meta["summary"][t.title] = t.description
         meta["thumbnail"][t.title] = t.thumbnail
+        meta["text"][t.title] = wtp.parse(re.sub("<ref>[^<]+</ref>", " ", t.content)).plain_text()
+    for i, a in links.iterrows():
+        if f"{a.parent} -> {a.url}" not in meta["links"]:
+            meta["links"][f"{a.parent} -> {a.url}"] = all_links.loc[np.logical_and(all_links["parent"] == a.parent, all_links["url"] == a.url)].iloc[0].text
     return meta
 
 edges = get_edges()
