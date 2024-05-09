@@ -1,4 +1,3 @@
-var highlightActive = false;
 var allNodes;
 var network;
 var currentNode = "";
@@ -38,33 +37,11 @@ function draw() {
   //var data = { nodes: getNodeData(SAVE), edges: getEdgeData(SAVE) };
   //data = importNetwork(SAVE)
   network = new vis.Network(container, data, options);
-
   network.stabilize(1000)
 
-  network.on("stabilizationProgress", function (params) {
-    document.getElementById('loading').innerText = `${Math.round((params.iterations / params.total) * 100).toString()}%`
-  });
-  network.on("stabilizationIterationsDone", function () {
-    document.body.removeAttribute("style")
-    document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
-  });
-  network.on('click', function (properties) {
-    document.activeElement.blur()
-    let node = nodesDataset.get(properties.nodes[0]);
-    if (node.id == undefined) {
-      dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
-      dom.description.innerHTML = ""
-      dom.episodes.innerHTML = ""
-      dom.thumbnail.src = "assets/gag-logo.webp"
-      dom.sidebar_data.style.display = "none";
-      dom.info.style.opacity = 0
-      currentNode = ""
-    } else {
-      showNodeInfo(node)
-    };
-  });
+  createEvents()
 
-  // search
+  // prepare search autocompletion
   Object.keys(nodesDataset._data).sort().forEach(function (item) {
     const option = document.createElement('option');
     option.setAttribute('value', item);
@@ -147,15 +124,11 @@ function showNodeInfo(node) {
   })
 }
 
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
-
 function showEdgeInfo(a, b) {
   let text = DATA.meta.text[a];
   let link_context = DATA.meta.links[`${a} -> ${b}`].context;
   let link_text = DATA.meta.links[`${a} -> ${b}`].text;
-  let text_index = text.search(escapeRegExp(link_context));
+  let text_index = text.search(escapeRegExp(link_context).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   if (text_index == -1) {
     link_context = link_text;
     text_index = text.search(link_text);
@@ -181,6 +154,7 @@ function showEdgeInfo(a, b) {
 
 function search(elem) {
   if (event.key === 'Enter') {
+    // remove focus
     document.activeElement.blur()
     showNodeInfo(nodesDataset.get(elem.value));
     network.selectNodes([elem.value])
@@ -198,7 +172,7 @@ function imageAnimate() {
 
 
 function exportNetwork() {
-  var _nodes = objectToarrows_to(network.getPositions());
+  var _nodes = objectToArray(network.getPositions());
   var _edges = Object.values(edges._data)
   console.log(JSON.stringify({ "nodes": _nodes, "edges": _edges }, undefined, 2))
 }
@@ -210,7 +184,7 @@ function importNetwork(save) {
   }
 }
 
-function objectToarrows_to(obj) {
+function objectToArray(obj) {
   return Object.keys(obj).map(function (key) { obj[key].id = key; return obj[key] });
 }
 
@@ -242,6 +216,7 @@ function focus_node(node) {
 }
 
 function averagePos(a, b) {
+  // center of two nodes
   positions = network.getPositions()
   a = positions[a]
   b = positions[b]

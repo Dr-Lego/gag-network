@@ -1,0 +1,50 @@
+<html lang="en">
+
+<head>
+    <script>
+        var stabilized = false;
+    </script>
+    <script src="../visualize/js/vis.min.js.js"></script>
+    <script src="../visualize/data/data.js"></script>
+    <script src="../visualize/data/options.js"></script>
+</head>
+
+<body>
+    <div id="network"></div>
+
+    <script>
+        var allNodes;
+        var network;
+        var currentNode = "";
+        var stabilized = false;
+        nodesDataset = new vis.DataSet();
+        nodesDataset.add(DATA["nodes"]);
+        edges = new vis.DataSet();
+        edges.add(DATA["edges"]);
+
+        // create a network
+        var container = document.getElementById("network");
+        var data = {
+            nodes: nodesDataset,
+            edges: edges,
+        };
+
+        network = new vis.Network(container, data, options);
+        network.stabilize(100)
+
+        function exportNetwork() {
+            var _nodes = objectToArray(network.getPositions());
+            var _edges = Object.values(edges._data)
+            return JSON.stringify({ "nodes": _nodes, "edges": _edges }, undefined, 2)
+        }
+
+        network.on("stabilizationProgress", function (params) {});
+        network.on("stabilizationIterationsDone", function () {
+            stabilized = true
+        });
+
+    </script>
+
+</body>
+
+</html>

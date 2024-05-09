@@ -1,7 +1,11 @@
 from scraping._Database import Database
 import pandas as pd
+import argparse
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
+import time
 import numpy as np
 import wikitextparser as wtp
 from alive_progress import alive_bar
@@ -9,6 +13,15 @@ import re
 
 edges: list
 nodes: list
+categories: dict
+links: pd.DataFrame
+all_links: pd.DataFrame
+titles: pd.DataFrame
+articles: pd.DataFrame
+episodes: pd.DataFrame
+edges: list
+nodes: list
+meta: dict
 
 
 def get_icon(title: str) -> str:
@@ -29,27 +42,30 @@ def get_icon(title: str) -> str:
     return None
 
 
-db = Database()
-link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
-      SELECT DISTINCT url FROM links
-      WHERE url IN (SELECT title FROM articles)
-      GROUP BY url having count(url) <= 200)"""
+def get_dataframes():
+    global links, all_links, titles, articles, episodes, categories
+    db = Database()
+    link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
+        SELECT DISTINCT url FROM links
+        WHERE url IN (SELECT title FROM articles)
+        GROUP BY url having count(url) <= 200)"""
 
-links = pd.read_sql(link_filter, con=db.conn)
-all_links = pd.read_sql("SELECT * FROM links", con=db.conn)
-titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
-articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
-episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
-categories_df = pd.read_sql(
-    "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'", con=db.conn
-)
-categories = {}
-for i, a in categories_df.iterrows():
-    categories[a.parent] = categories.get(a.parent, []) + [
-        a.url.removeprefix("Kategorie:")
-    ]
+    links = pd.read_sql(link_filter, con=db.conn)
+    all_links = pd.read_sql("SELECT * FROM links", con=db.conn)
+    titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
+    articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
+    episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
+    categories_df = pd.read_sql(
+        "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
+        con=db.conn,
+    )
+    categories = {}
+    for i, a in categories_df.iterrows():
+        categories[a.parent] = categories.get(a.parent, []) + [
+            a.url.removeprefix("Kategorie:")
+        ]
 
-db.close()
+    db.close()
 
 
 def get_edges() -> list:
@@ -117,13 +133,16 @@ def link_context(text, link):
 
 
 def get_metadata() -> dict:
+    global articles, links
     meta = {"episodes": {}, "summary": {}, "thumbnail": {}, "text": {}, "links": {}}
     with alive_bar(len(articles.index), title="preparing article metadata") as bar:
         for i, t in articles.iterrows():
             meta["episodes"][t.title] = meta["episodes"].get(t.title, []) + [
                 {
                     k: list(v.values())[0]
-                    for k, v in episodes.loc[episodes["nr"] == t.episode].to_dict().items()
+                    for k, v in episodes.loc[episodes["nr"] == t.episode]
+                    .to_dict()
+                    .items()
                 }
             ]
             meta["summary"][t.title] = t.description
@@ -136,7 +155,7 @@ def get_metadata() -> dict:
                 )
             ).plain_text()
             bar()
-    
+
     with alive_bar(len(links.index), title="preparing link metadata") as bar:
         for i, a in links.iterrows():
             if f"{a.parent} -> {a.url}" not in meta["links"]:
@@ -156,13 +175,42 @@ def get_metadata() -> dict:
     return meta
 
 
-edges = get_edges()
-nodes = get_nodes()
-meta = get_metadata()
+def refresh_data():
+    global edges, nodes, meta
+    get_dataframes()
+    edges = get_edges()
+    nodes = get_nodes()
+    meta = get_metadata()
+
+    with open("visualize/data/data.js", "w", encoding="utf-8") as f:
+        f.write(
+            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
+        )
+        f.close()
+        
+class wait_for_stabilized(object):
+    def __init__(self) -> None:
+        pass
+    
+    def __call__(self, driver: webdriver.Chrome):
+        return driver.execute_script("return stabilized;")
+        
+def create_save():
+    driver = webdriver.Chrome()
+    driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/save/prepare.html")
+    try:
+        stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
+        print(stabilized)
+    finally:
+        driver.quit()
 
 
-with open("visualize/data/data.js", "w", encoding="utf-8") as f:
-    f.write(
-        "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
-    )
-    f.close()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", help="nodes and edges are refreshed", default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--save", help="a new network save is created", default=True, action=argparse.BooleanOptionalAction)
+    args = parser.parse_args()
+    if args.data:
+        refresh_data()
+    if args.save:
+        create_save()
