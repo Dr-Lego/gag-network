@@ -1,10 +1,13 @@
+const searchParams = new URLSearchParams(window.location.search)
 var allNodes;
 var network;
 var currentNode = "";
-nodesDataset = new vis.DataSet();
-nodesDataset.add(DATA["nodes"]);
-edges = new vis.DataSet();
-edges.add(DATA["edges"]);
+var data = SAVE;
+if (searchParams.has("new")) {
+  data = DATA;
+};
+var nodesDataset = new vis.DataSet(data.nodes);
+var edgesDataset = new vis.DataSet(data.edges);
 
 const dom = {
   "title": document.getElementById("title"),
@@ -28,16 +31,22 @@ const dom = {
 
 
 function draw() {
+
   // create a network
   var container = document.getElementById("network");
-  var data = {
+
+  var _data = {
     nodes: nodesDataset,
-    edges: edges,
+    edges: edgesDataset,
   };
-  //var data = { nodes: getNodeData(SAVE), edges: getEdgeData(SAVE) };
-  //data = importNetwork(SAVE)
-  network = new vis.Network(container, data, options);
-  network.stabilize(1000)
+
+  network = new vis.Network(container, _data, options);
+  if (searchParams.has("new")) {
+    network.stabilize(1000)
+  }else{
+    document.body.removeAttribute("style")
+    document.getElementById('loading-container').style.display = "none"
+  }
 
   createEvents()
 
@@ -78,7 +87,7 @@ function showNodeInfo(node) {
   dom.info.style.opacity = 0
 
   // connections to
-  let connections_to = DATA["edges"].filter(
+  let connections_to = data.edges.filter(
     edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
@@ -94,7 +103,7 @@ function showNodeInfo(node) {
   if (connections_to.length == 0) { dom.connections_to_section.style.display = "none" }
 
   // connections from
-  let connections_from = DATA["edges"].filter(
+  let connections_from = data.edges.filter(
     edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
@@ -128,7 +137,7 @@ function showEdgeInfo(a, b) {
   let text = DATA.meta.text[a];
   let link_context = DATA.meta.links[`${a} -> ${b}`].context;
   let link_text = DATA.meta.links[`${a} -> ${b}`].text;
-  let text_index = text.search(escapeRegExp(link_context).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  let text_index = text.search(link_context.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   if (text_index == -1) {
     link_context = link_text;
     text_index = text.search(link_text);
@@ -173,14 +182,14 @@ function imageAnimate() {
 
 function exportNetwork() {
   var _nodes = objectToArray(network.getPositions());
-  var _edges = Object.values(edges._data)
-  console.log(JSON.stringify({ "nodes": _nodes, "edges": _edges }, undefined, 2))
+  var _edgesDataset = Object.values(edgesDataset._data)
+  console.log(JSON.stringify({ "nodes": _nodes, "edgesDataset": _edgesDataset }, undefined, 2))
 }
 
 function importNetwork(save) {
   return {
     nodes: getNodeData(save.nodes),
-    edges: new vis.DataSet(save.edges),
+    edgesDataset: new vis.DataSet(save.edges),
   }
 }
 
@@ -231,7 +240,7 @@ function nodeDistance(a, b) {
 }
 
 function focus_edge(a, b) {
-  edge = DATA["edges"].filter(
+  edge = data.edges.filter(
     edge => [a, b].sort().toString() == [edge.to, edge.from].sort().toString()
   )[0].id;
   network.selectEdges([edge])

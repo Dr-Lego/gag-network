@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
 import time
+import json
 import numpy as np
 import wikitextparser as wtp
 from alive_progress import alive_bar
@@ -196,11 +197,16 @@ class wait_for_stabilized(object):
         return driver.execute_script("return stabilized;")
         
 def create_save():
-    driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(options=options)
     driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/save/prepare.html")
     try:
+        print("Please be patient while a save is being created. This can take up to a few minutes.")
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
-        print(stabilized)
+        save = json.dumps(driver.execute_script("return exportNetwork();"), separators=(",", ":"), ensure_ascii=False)
+        with open("visualize/data/save.js", "w", encoding="utf-8") as f:
+            f.write(f"const SAVE = {save};")
     finally:
         driver.quit()
 
