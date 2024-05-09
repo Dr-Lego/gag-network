@@ -1,8 +1,12 @@
 import os
 from PIL import Image
 
+"""
+add opacity + padding to all icons in 'visualize/assets/standard_icons' and save them to 'visualize/assets/icons
+"""
+
 # Define the path to the folder containing the images
-folder_path = 'visualize/assets/standard_icons'
+folder_path = "visualize/assets/standard_icons"
 
 # Define the new canvas size
 new_width = 850
@@ -17,7 +21,7 @@ for filename in os.listdir(folder_path):
     width, height = img.size
 
     # Create a new image with the desired canvas size
-    new_img = Image.new('RGBA', (new_width, new_height), (0, 0, 0, 0))
+    new_img = Image.new("RGBA", (new_width, new_height), (0, 0, 0, 0))
 
     # Calculate the position of the original image in the new canvas
     left = (new_width - width) // 2
@@ -34,6 +38,5 @@ for filename in os.listdir(folder_path):
             if a > 0:
                 pixels[x, y] = (r, g, b, 100)
 
-
     # Save the new image
-    new_img.save(os.path.join('visualize/assets/icons', filename))
+    new_img.save(os.path.join("visualize/assets/icons", filename))

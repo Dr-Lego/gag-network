@@ -1,0 +1,8 @@
+This is a test for a quite effective prompt for LLMs to describe connections between articles:
+
+    Explain the connection between Æthelflæd and William of Malmesbury, using only this excerpt from the wikipedia article about Æthelflæd. Not too much details, maximum two sentences, use ONLY information from the text. Answer in GERMAN and only provide the information asked for, absolutely no additional text.
+    "Æthelred und Æthelflæd hatten nur ein der Nachwelt bekanntes Kind, ihre Tochter Ælfwynn, die vermutlich in den ersten Jahren der Ehe geboren wurde. William of Malmesbury, der im 12. Jahrhundert Æthelflæds Leben beschreibt, sagt dazu, dass Ælfwynns Geburt so schwer war, dass Æthelflæd es daraufhin vorzog, enthaltsam zu leben, um ein weiteres solch schmerzhaftes Erlebnis zu vermeiden. Da es keine Quellen aus Æthelflæds Lebenszeit gibt, die diese Geschichte bestätigen, vermuten moderne Historiker, dass William diese Anekdote möglicherweise erfunden hat. So könnte es ein Ziel von William gewesen sein, Æthelflæd als moralisch rein darzustellen, und ein zölibatäres, enthaltsames Leben würde dann ins Bild passen."
+
+Output by ``lama-3-sonar-large-32k-online`` on [labs.perplexity.ai](https://labs.perplexity.ai/):
+
+    William of Malmesbury beschreibt Æthelflæd als eine moralisch reine Person, die nach der Geburt ihrer Tochter Ælfwynn ein enthaltsames Leben führte, um ein weiteres schmerzhaftes Erlebnis zu vermeiden.

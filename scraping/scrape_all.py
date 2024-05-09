@@ -1,5 +1,5 @@
 from episodes import refresh_episodes
-from articles2 import refresh_articles
+from articles import refresh_articles
 from links import refresh_links
 
 def cprint(text:str):
