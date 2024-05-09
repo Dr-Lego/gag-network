@@ -60,7 +60,7 @@ function draw() {
       dom.info.style.opacity = 0
       currentNode = ""
     } else {
-      showInfo(node)
+      showNodeInfo(node)
     };
   });
 
@@ -72,7 +72,7 @@ function draw() {
   });
 }
 
-function showInfo(node) {
+function showNodeInfo(node) {
   currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
   dom.description.innerHTML = DATA.meta.summary[node.id]
@@ -99,7 +99,7 @@ function showInfo(node) {
   dom.connections_from_section.style.display = "block"
 
   dom.info.style.opacity = 0
-  
+
   // connections to
   let connections_to = DATA["edges"].filter(
     edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
@@ -137,37 +137,52 @@ function showInfo(node) {
   // edge event listener
   $(".connection").click(function () {
     let a; let b;
-    if(this.parentElement.id.includes("to")){
+    if (this.parentElement.id.includes("to")) {
       a = currentNode; b = this.innerText;
-    }else{
-      a = this.innerText; b = currentNode; 
+    } else {
+      a = this.innerText; b = currentNode;
     }
     focus_edge(a, b);
-    let text = DATA.meta.text[a]
-    let link_text = DATA.meta.links[`${a} -> ${b}`]
-    let text_index = text.search(link_text)
-    let context = text.substring(Math.max(0, text_index-400), Math.min(text.length-1, text_index+400)) // get context of word
-    let sentences = nlp(context).sentences().json()
-    context = []
-    for (let i = 1; i < sentences.length-1; i++) {
-      const sent = sentences[i];
-      if(!sent.text.startsWith("==") && !sent.text.endsWith("==")){
-        context.push(sent.text)
-      }
-    };
-    context = context.join(" ")
-    context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
-    context = context.replaceAll("\n", "<br>")
-    dom.context.innerHTML = context
-    dom.context_title.innerText = `${a} > ${b}`
-    dom.info.style.opacity = 1
+    showEdgeInfo(a, b);
   })
 }
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
+function showEdgeInfo(a, b) {
+  let text = DATA.meta.text[a];
+  let link_context = DATA.meta.links[`${a} -> ${b}`].context;
+  let link_text = DATA.meta.links[`${a} -> ${b}`].text;
+  let text_index = text.search(escapeRegExp(link_context));
+  if (text_index == -1) {
+    link_context = link_text;
+    text_index = text.search(link_text);
+  }
+  let context = text.substring(Math.max(0, text_index - 600), Math.min(text.length - 1, text_index + 600)); // get context of word 
+  text_index = context.search(link_text);
+  context = context.substring(Math.max(0, text_index - 400), Math.min(context.length - 1, text_index + 400)); // get more accurate context of word 
+  let sentences = nlp(context).sentences().json()
+  context = []
+  for (let i = 1; i < sentences.length - 1; i++) {
+    const sent = sentences[i];
+    if (!sent.text.startsWith("==") && !sent.text.endsWith("==")) {
+      context.push(sent.text)
+    }
+  };
+  context = context.join(" ")
+  context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
+  dom.context.innerHTML = context
+  dom.context_title.innerText = `${a} > ${b}`
+  dom.info.style.opacity = 1
+}
+
 
 function search(elem) {
   if (event.key === 'Enter') {
     document.activeElement.blur()
-    showInfo(nodesDataset.get(elem.value));
+    showNodeInfo(nodesDataset.get(elem.value));
     network.selectNodes([elem.value])
     focus_node(elem.value);
   }
@@ -215,12 +230,6 @@ function getNodeData(data) {
   return new vis.DataSet(networkNodes);
 }
 
-function context(a, b) {
-  let text = DATA.meta.text[a]
-  let link = DATA.meta.links[b]
-
-}
-
 function focus_node(node) {
   network.moveTo({
     position: network.getPositions()[node],
@@ -252,6 +261,7 @@ function focus_edge(a, b) {
   )[0].id;
   network.selectEdges([edge])
 
+  // linear scaling function found using two fixed points
   scale = Math.max(0.25, -0.000366703337 * nodeDistance(a, b) + 1.383498349835)
 
   network.moveTo({
