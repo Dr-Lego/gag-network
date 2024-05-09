@@ -1,18 +1,19 @@
 import bz2
 import pandas as pd
 import ast
-from _Database import Database
+from scraping._Database import Database
 from typing import Iterable, Literal
 import itertools
 import threading
-import wikitextparser as wtp
 import requests
 import time
-import numpy as np
+from alive_progress import alive_bar
 import json
 import xmltodict
 from bs4 import BeautifulSoup
-import string
+
+index: str
+byte_positions: dict
 
 
 def get_index() -> str:
@@ -82,56 +83,58 @@ def get_byte_positions(articles):
         thread.join()
         
 
-index: str = get_index().split("\n")
-byte_positions: dict = {}
 
-
-def scrape_articles(db=Iterable, mode: Literal["update", "refresh"] = "update") -> None:
+def scrape_articles(db=Iterable, mode: Literal["update", "refresh"] = "refresh") -> None:
+    global index, byte_positions
     episodes = pd.read_sql("SELECT * FROM episodes", con=db[1])
     episodes[["topics", "links"]] = episodes[["topics", "links"]].map(ast.literal_eval)
 
     articles = list(zip(episodes["nr"], episodes["topics"]))
     articles = [[(ep[0], a) for a in ep[1]] for ep in articles]
     articles = list(itertools.chain.from_iterable(articles))
-
+    
+    index = get_index().split("\n")
+    byte_positions = {}
     
     if mode == "update":
         _keys = ["/wiki/"+k for k in pd.read_sql("SELECT * FROM articles", con=db[1])["key"].to_list()]
         articles = list([a for a in articles if a[1] not in _keys])
         
+    with alive_bar(len(articles), title=f"{mode.removesuffix('e')}ing articles") as bar:
+        for i, episode in enumerate(articles):
+            key = episode[1].removeprefix("/wiki/")#
+            nr = episode[0]
+            try:
+                page = {"title": ""}
+                page: dict = xmltodict.parse(get_page_xml(key.replace("_", " ")))["page"]
+                if page.get("redirect", False):
+                    page: dict = xmltodict.parse(get_page_xml(page["redirect"]["@title"]))["page"]
+                page["text"] = page["revision"]["text"]["#text"]
+                
+                api_call: dict = json.loads(requests.get(
+                    "https://de.wikipedia.org/api/rest_v1/page/summary/" + key,
+                    headers= {
+                        'User-Agent': 'GAG-Mining (Dr_Lego@ist-einmalig.de)'
+                    }
+                ).text)
+                description, thumbnail = api_call.get("extract", ""), api_call.get("originalimage", {}).get("source", "")
+                
+                db[0].execute(f"INSERT INTO articles (key, title, id, episode, content, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?)", (key, page["title"], page["id"], nr, page["text"], description, thumbnail))
+                
+                if i%50 == 0:
+                    db[1].commit()
+                print(f"{i+1}/{len(articles)}     {key}   {nr}")
+                time.sleep(0.2)
+            except Exception as e:
+                with open("articles.log", "a") as f:
+                    f.write(page["title"] + "\n" + str(e) + "\n\n\n")
+                    f.close()
+                print("\033[91m", f"{i+1}/{len(articles)}     {key}", "\033[0m")
+                
+            bar()
 
-    for i, episode in enumerate(articles):
-        key = episode[1].removeprefix("/wiki/")#
-        nr = episode[0]
-        try:
-            page = {"title": ""}
-            page: dict = xmltodict.parse(get_page_xml(key.replace("_", " ")))["page"]
-            if page.get("redirect", False):
-                page: dict = xmltodict.parse(get_page_xml(page["redirect"]["@title"]))["page"]
-            page["text"] = page["revision"]["text"]["#text"]
-            
-            api_call: dict = json.loads(requests.get(
-                "https://de.wikipedia.org/api/rest_v1/page/summary/" + key,
-                headers= {
-                    'User-Agent': 'GAG-Mining (Dr_Lego@ist-einmalig.de)'
-                }
-            ).text)
-            description, thumbnail = api_call.get("extract", ""), api_call.get("originalimage", {}).get("source", "")
-            
-            db[0].execute(f"INSERT INTO articles (key, title, id, episode, content, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?)", (key, page["title"], page["id"], nr, page["text"], description, thumbnail))
-            
-            if i%50 == 0:
-                db[1].commit()
-            print(f"{i+1}/{len(articles)}     {key}   {nr}")
-            time.sleep(0.5)
-        except Exception as e:
-            with open("articles.log", "a") as f:
-                f.write(page["title"] + "\n" + str(e) + "\n\n\n")
-                f.close()
-            print("\033[91m", f"{i+1}/{len(articles)}     {key}", "\033[0m")
 
-
-def refresh_articles(mode: Literal["update", "refresh"] = "update") -> pd.DataFrame:
+def refresh_articles(mode: Literal["update", "refresh"] = "refresh") -> pd.DataFrame:
     db = Database()
     if mode == "refresh":
         db.drop("articles")

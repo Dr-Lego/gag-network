@@ -2,33 +2,30 @@ from urllib.parse import unquote_plus
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
-from _Database import Database
+from alive_progress import alive_bar
+from scraping._Database import Database
 
 
 def scrape_episodes() -> pd.DataFrame:
-    """
-    Scrape episode data from the Wikipedia page for the "Geschichten aus der Geschichte" podcast.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing data for each episode.
-    """
     response = requests.get("https://de.wikipedia.org/wiki/Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste")
     response.encoding = "UTF-8"
     soup = BeautifulSoup(response.text, "lxml")
 
     episodes: list[dict] = []
 
-    for year_table in soup.find_all(class_="wikitable"):
-        for episode_row in year_table.select("tbody > tr"):
-            data = [
-                str(cell.text).strip()
-                if i not in [4, 6]
-                else list([unquote_plus(a["href"]) for a in cell.find_all("a", href=True) if (not ("#" in a["href"] or a["href"].startswith("/w/")) ) and not "Dungeons" in a["href"]])
-                for i, cell in enumerate(episode_row.find_all("td"))
-            ]
-            episode = dict(zip(["nr", "date", "title", "subtitle", "topics", "duration", "links"], [str(x) for x in data]))
-            if episode:
-                episodes.append(episode)
+    with alive_bar(sum([len(year.select("tbody > tr")) for year in soup.find_all(class_="wikitable")]), title="refreshing episodes:") as bar:
+        for year_table in soup.find_all(class_="wikitable"):
+            for episode_row in year_table.select("tbody > tr"):
+                data = [
+                    str(cell.text).strip()
+                    if i not in [4, 6]
+                    else list([unquote_plus(a["href"]) for a in cell.find_all("a", href=True) if (not ("#" in a["href"] or a["href"].startswith("/w/")) ) and not "Dungeons" in a["href"]])
+                    for i, cell in enumerate(episode_row.find_all("td"))
+                ]
+                episode = dict(zip(["nr", "date", "title", "subtitle", "topics", "duration", "links"], [str(x) for x in data]))
+                if episode:
+                    episodes.append(episode)
+                bar()
 
     df = pd.DataFrame(episodes)
     df.set_index("nr", inplace=True)
@@ -37,7 +34,7 @@ def scrape_episodes() -> pd.DataFrame:
 
 
 
-def refresh_episodes() -> pd.DataFrame:
+def refresh_episodes(*args) -> pd.DataFrame:
     db = Database()
     db.drop("episodes")
     db.setup()

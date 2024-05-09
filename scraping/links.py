@@ -2,7 +2,8 @@ import wikitextparser as wtp
 import pandas as pd
 import sqlite3
 import json
-from _Database import Database
+from alive_progress import alive_bar
+from scraping._Database import Database
 
 
 def context(text) -> dict:
@@ -27,21 +28,22 @@ def scrape_links(con:sqlite3.Connection):
     articles = pd.read_sql("SELECT * FROM articles", con=con)
     links: list[dict] = []
 
-
-    for i, article in articles.iterrows():
-        #try:
-        #parsed, contexts = list(context(article["content"]).values())
-        parsed = wtp.parse(article["content"])
-        for a in parsed.wikilinks:
-            links.append({
-                "url": a.target,
-                "text": a.text if a.text else a.target,
-                "parent": article["title"],
-                "wikitext": str(a),
-                #"context": json.dumps(contexts[a.target])
-            })
-        # except:
-        #     print("\033[91m", f"{i+1}  {article['title']}", "\033[0m")
+    with alive_bar(len(articles.index), title="refreshing links") as bar:
+        for i, article in articles.iterrows():
+            #try:
+            #parsed, contexts = list(context(article["content"]).values())
+            parsed = wtp.parse(article["content"])
+            for a in parsed.wikilinks:
+                links.append({
+                    "url": a.target,
+                    "text": a.text if a.text else a.target,
+                    "parent": article["title"],
+                    "wikitext": str(a),
+                    #"context": json.dumps(contexts[a.target])
+                })
+            # except:
+            #     print("\033[91m", f"{i+1}  {article['title']}", "\033[0m")
+            bar()
 
 
 
@@ -51,7 +53,7 @@ def scrape_links(con:sqlite3.Connection):
     return df
 
 
-def refresh_links():
+def refresh_links(*args):
     db = Database()
     db.drop("links")
     db.setup()
@@ -59,5 +61,5 @@ def refresh_links():
     r = scrape_links(db.conn)
 
     db.close()
-
+    
     return r
