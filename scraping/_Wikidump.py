@@ -43,7 +43,6 @@ class Wikidump(object):
         else:
             self.index = Index(self.index_path)
 
-        self.decomp = BZ2Decompressor()
 
     def index_to_db(self):
         print(
@@ -77,7 +76,7 @@ class Wikidump(object):
         ).fetchall()[0][0]
         return {"data": data[0], "start": start_byte, "end": end_byte}
 
-    @lru_cache(maxsize=None)
+    #@lru_cache(maxsize=None)
     def get_page(self, title: str) -> str:
         byte_position = self.get_byte_position(title)
         start_byte, end_byte = byte_position["start"], byte_position["end"]
@@ -88,7 +87,7 @@ class Wikidump(object):
         with open(self.path, "rb") as f:
             f.seek(start_byte)
             readback = f.read(end_byte - start_byte - 1)
-            page_xml = self.decomp.decompress(readback).decode()
+            page_xml = BZ2Decompressor().decompress(readback).decode()
             f.close()
 
         soup = BeautifulSoup(page_xml, "lxml")
@@ -98,6 +97,16 @@ class Wikidump(object):
 
         return page_xml
     
-# wd = Wikidump(constants.WIKIDUMP_DE, constants.WIKIDUMP_DE_INDEX)
-# print(xmltodict.parse(wd.get_page("efhkefe")))
-# wd.close()
+de = Wikidump(constants.WIKIDUMP_DE, constants.WIKIDUMP_DE_INDEX)
+en = Wikidump(constants.WIKIDUMP_EN, constants.WIKIDUMP_EN_INDEX)
+xmltodict.parse(de.get_page("Alboin"))
+xmltodict.parse(en.get_page("Alboin"))
+print(1)
+xmltodict.parse(de.get_page("Biometrie"))
+xmltodict.parse(en.get_page("Biometrie"))
+print(2)
+xmltodict.parse(de.get_page("Kunimund"))
+xmltodict.parse(en.get_page("Kunimund"))
+print(3)
+de.close()
+en.close()

@@ -109,10 +109,9 @@ def scrape_articles(
                 if i % 50 == 0:
                     db[1].commit()
                 # print(f"{i+1}/{len(articles)}     {key}   {nr}")
-                time.sleep(0.2)
             except Exception as e:
                 with open("articles.log", "a") as f:
-                    f.write(page["de"]["title"] + "\n" + str(e) + "\n\n\n")
+                    f.write(key + "\n" + str(e) + "\n\n\n")
                     f.close()
                 print("\033[91m", f"{i+1}/{len(articles)}     {key}", "\033[0m")
 
