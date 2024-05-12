@@ -58,20 +58,16 @@ def scrape_articles(
 
     with alive_bar(len(articles), title=f"{mode.removesuffix('e')}ing articles") as bar:
         for i, episode in enumerate(articles):
-            key = episode[1].removeprefix("/wiki/")
-            key = redirects.get(key, key)
+            key: str = episode[1].removeprefix("/wiki/")
+            redirect: str = redirects.get(key, key)
             nr = episode[0]
             try:
-                page: dict = xmltodict.parse(wikidump_de.get_page(key.replace("_", " ")))["page"]
-                if page.get("redirect", False):
-                    page: dict = xmltodict.parse(
-                        wikidump_de.get_page(page["redirect"]["@title"])
-                    )["page"]
+                page: dict = xmltodict.parse(wikidump_de.get_page(redirect.replace("_", " ")))["page"]
                 page["text"] = page["revision"]["text"]["#text"]
 
                 api_call: dict = json.loads(
                     requests.get(
-                        "https://de.wikipedia.org/api/rest_v1/page/summary/" + key,
+                        "https://de.wikipedia.org/api/rest_v1/page/summary/" + redirect,
                         headers={"User-Agent": constants.USER_AGENT},
                     ).text
                 )

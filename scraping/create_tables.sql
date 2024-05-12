@@ -10,9 +10,11 @@ CREATE TABLE IF NOT EXISTS episodes (
 CREATE TABLE IF NOT EXISTS articles (
     key VARCHAR(100),
     title VARCHAR(100),
+    title_en VARCHAR(100),
     id INTEGER,
     episode VARCHAR(20),
     content TEXT,
+    content_en TEXT,
     description TEXT,
     thumbnail VARCHAR(250)
 );
