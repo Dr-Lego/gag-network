@@ -1,37 +1,26 @@
-from urllib.parse import unquote_plus
 import pandas as pd
-from bs4 import BeautifulSoup
+import itertools
 import requests
-from alive_progress import alive_bar
+import json
+import wikitextparser as wtp
 from scraping._Database import Database
 
 
 def scrape_episodes() -> pd.DataFrame:
-    response = requests.get("https://de.wikipedia.org/wiki/Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste")
-    response.encoding = "UTF-8"
-    soup = BeautifulSoup(response.text, "lxml")
-
-    episodes: list[dict] = []
-
-    with alive_bar(sum([len(year.select("tbody > tr")) for year in soup.find_all(class_="wikitable")]), title="refreshing episodes:") as bar:
-        for year_table in soup.find_all(class_="wikitable"):
-            for episode_row in year_table.select("tbody > tr"):
-                data = [
-                    str(cell.text).strip()
-                    if i not in [4, 6]
-                    else list([unquote_plus(a["href"]) for a in cell.find_all("a", href=True) if (not ("#" in a["href"] or a["href"].startswith("/w/")) ) and not "Dungeons" in a["href"]])
-                    for i, cell in enumerate(episode_row.find_all("td"))
-                ]
-                episode = dict(zip(["nr", "date", "title", "subtitle", "topics", "duration", "links"], [str(x) for x in data]))
-                if episode:
-                    episodes.append(episode)
-                bar()
-
-    df = pd.DataFrame(episodes)
-    df.set_index("nr", inplace=True)
-    df.rename(index=lambda i: f"GAG{i}" if len(i) <= 3 else i, inplace=True)
-    return df
-
+    response = requests.get("https://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&titles=Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste").text
+    text = wtp.parse(list(json.loads(response)["query"]["pages"].values())[0]["revisions"][0]["*"])
+    
+    episodes = pd.DataFrame(itertools.chain.from_iterable([table.data() for table in text.tables]), columns=["nr", "date", "title", "subtitle", "topics", "duration", "links"])
+    episodes = episodes.iloc[1:]
+    episodes = episodes[episodes["date"] != "Datum"]
+    episodes[["topics", "links"]] = episodes[["topics", "links"]].map(lambda cell: [str(a.target) if isinstance(a, wtp.WikiLink) else str(a.url) for a in wtp.parse(cell).wikilinks + wtp.parse(cell).external_links])
+    episodes[["topics", "links"]] = episodes[["topics", "links"]].map(lambda cell: [a.strip().split("#")[0].replace("Heinrich_VIII._(England)", "Heinrich VIII. (England)") for a in cell])
+    episodes["links"] = episodes["links"].map(lambda cell: [a for a in cell if not a.startswith("Datei:")])
+    episodes[["topics", "links"]] = episodes[["topics", "links"]].map(lambda cell: json.dumps(cell, ensure_ascii=False))
+    episodes.set_index("nr", inplace=True)
+    episodes.rename(index=lambda i: f"GAG{i}" if len(i) <= 3 else i, inplace=True)
+    
+    return episodes
 
 
 def refresh_episodes(*args) -> pd.DataFrame:
