@@ -116,15 +116,20 @@ def scrape_articles(
         wikidump_de.index.conn,
     )
     positions_de.set_index("id", inplace=True)
-    positions_de.sort_values("position")
+    positions_de.sort_values("start")
 
-    test = pd.read_sql(
-        f"""SELECT t1.title, t1.position AS start, (SELECT MIN(t2.position) FROM pages t2 WHERE t1.title = t2.title AND t2.position > t1.position) AS stop
-        FROM pages t1 WHERE t1.title IN {tuple(set([title for nr, title in articles]))}""",
-        wikidump_de.index.conn,
-    )
+    # test = pd.read_sql(
+    #     f"""SELECT t1.position AS start, (SELECT MIN(t2.position) FROM pages t2 WHERE t2.position > t1.position) AS stop
+    #     FROM pages t1 WHERE t1.title = 'Pizza'""",
+    #     wikidump_de.index.conn,
+    # )
+    # test = pd.read_sql(
+    #     f"""SELECT MIN(position) FROM pages WHERE position > {positions_de[positions_de.title == "Alboin"].iloc[0].position}""",
+    #     wikidump_de.index.conn,
+    # )
 
-    print(test)
+    #print(positions_de[positions_de.title == "Alboin"].iloc[0].position)
+    print(positions_de)
 
     return
 
