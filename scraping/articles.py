@@ -8,7 +8,7 @@ from multiprocessing import Process, Manager
 import requests
 import time
 from bz2 import BZ2Decompressor
-from multidict import MultiDict
+from werkzeug.datastructures import MultiDict
 import sqlite3
 from alive_progress import alive_bar
 import json
@@ -137,16 +137,16 @@ def scrape_articles(
     translations, redirects = in_english(articles)
     original_articles = {redirects.get(title, title): title for nr, title in articles}
     # titles mapped to episodes
-    episodes: MultiDict = MultiDict([(redirects.get(title, title), nr) for nr, title in articles])
-    articles = [title for nr, title in articles]
+    episodes_dict: MultiDict = MultiDict([(redirects.get(title, title), nr) for nr, title in articles])
+    articles = [redirects.get(title, title) for nr, title in articles]
 
     index: dict[str, pd.DataFrame] = {
         "de": pd.read_sql(
-            f"SELECT * FROM pages WHERE title IN {tuple(set([title for title in articles.items()]))}",
+            f"SELECT * FROM pages WHERE title IN {tuple(set([title for title in articles]))}",
             index_de.conn,
         ),
         "en": pd.read_sql(
-            f"SELECT * FROM pages WHERE title IN {tuple(filter(None, set([translations.get(title, '') for title in articles.items()])))}",
+            f"SELECT * FROM pages WHERE title IN {tuple(filter(None, set([translations.get(title, '') for title in articles])))}",
             index_en.conn,
         ),
     }
@@ -202,24 +202,29 @@ def scrape_articles(
                     process.join()
                 
             page = return_dict
-
-            db[0].execute(
-                f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
+            
+            data = ((
                     original_articles[row.title],
                     row.title,
                     row_en.title if not row_en.empty else "",
-                    id,
-                    articles[row.title],
+                    id),
+                    (
                     page["de"]["revision"]["text"]["#text"],
                     page["en"]["revision"]["text"]["#text"] if "en" in page else "",
                     page["api"].get("extract", ""),
-                    page["api"].get("originalimage", {}).get("source", ""),
-                ),
+                    page["api"].get("originalimage", {}).get("source", ""))
+            )
+
+            db[0].executemany(
+                f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                ([*data[0], ep, *data[1]] for ep in episodes_dict.getlist(row.title))
             )
             
             if i % 50 == 0:
                 db[1].commit()
+            bar()
+            if i == 5:
+                break
             
     db[1].commit()
 
