@@ -75,8 +75,8 @@ class Index(object):
         self.conn.close()
 
 
-# import timeit
-# import multiprocessing
+import timeit
+import multiprocessing
 
 
 # import xml.etree.ElementTree as ET
@@ -118,4 +118,4 @@ class Index(object):
 # end_time = timeit.default_timer()
 # print("Time taken:", end_time - start_time, "seconds")
 
-# # print(n, end=" ")
+# print(n, end=" ")

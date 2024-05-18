@@ -4,7 +4,9 @@ import ast
 from typing import Iterable, Literal, IO
 import itertools
 from bs4 import BeautifulSoup
-from multiprocessing import Process, Manager
+import multiprocessing
+from multiprocessing import Process, Manager, Pool
+import functools
 import requests
 import time
 from bz2 import BZ2Decompressor
@@ -19,6 +21,8 @@ import constants
 from scraping._Wikidump import Wikidump
 from scraping._Database import Database
 from scraping._Index import Index
+
+print(f"Number of CPUs: {multiprocessing.cpu_count()}")
 
 
 # wikidump_de: Wikidump = Wikidump(constants.WIKIDUMP_DE, constants.WIKIDUMP_DE_INDEX)
@@ -94,24 +98,27 @@ def get_page(
     #     print("\033[91m", f"{key}", "\033[0m")
 
 
-def get_page(
-    file: IO, title: str, start_byte: int, end_byte: int, return_dict, lang: str
-):
-    file.seek(start_byte)
-    readback = file.read(end_byte - start_byte - 1)
+def get_page(path: str, title: str, start_byte: int, end_byte: int):
+    with open(path, "rb") as file:
+        file.seek(start_byte)
+        readback = file.read(end_byte - start_byte - 1)
+        file.close()
     page_xml = BZ2Decompressor().decompress(readback).decode()
     soup = BeautifulSoup(page_xml, "lxml")
     page = soup.find("title", string=title).parent
-    return_dict[lang] = xmltodict.parse(str(page))["page"]
+    return xmltodict.parse(str(page))["page"]
 
 
-def api_call(title: str, return_dict):
-    return_dict["api"] = json.loads(
+def api_call(title: str):
+    return json.loads(
         requests.get(
             "https://de.wikipedia.org/api/rest_v1/page/summary/" + title,
             headers={"User-Agent": constants.USER_AGENT},
         ).text
     )
+    
+def foo(f):
+    return f()
 
 
 def scrape_articles(
@@ -137,7 +144,9 @@ def scrape_articles(
     translations, redirects = in_english(articles)
     original_articles = {redirects.get(title, title): title for nr, title in articles}
     # titles mapped to episodes
-    episodes_dict: MultiDict = MultiDict([(redirects.get(title, title), nr) for nr, title in articles])
+    episodes_dict: MultiDict = MultiDict(
+        [(redirects.get(title, title), nr) for nr, title in articles]
+    )
     articles = [redirects.get(title, title) for nr, title in articles]
 
     index: dict[str, pd.DataFrame] = {
@@ -150,86 +159,92 @@ def scrape_articles(
             index_en.conn,
         ),
     }
-    for i in index.values():
-        i.set_index("id", inplace=True)
-        i.sort_values("start")
+    for iterations in index.values():
+        iterations.set_index("id", inplace=True)
+        iterations.sort_values("start")
 
     wikidump_de: IO = open(constants.WIKIDUMP_DE, "rb")
     wikidump_en: IO = open(constants.WIKIDUMP_EN, "rb")
     
+
     with alive_bar(len(index["de"].index), title=f"refreshing articles") as bar:
-        i = 0
+        iterations = 0
         for id, row in index["de"].iterrows():
-            row_en = index["en"].loc[
-                index["en"].title == translations.get(row.title, "")
-            ].iloc[0]
-
-            manager = Manager()
-            return_dict = manager.dict()
-
+            row_en = (
+                index["en"]
+                .loc[index["en"].title == translations.get(row.title, "")]
+                .iloc[0]
+            )
+            
             # get german page, english page and summary/thumbnail in parallel
-            processes = {
-                "de": Process(
-                    target=get_page,
-                    args=(
-                        wikidump_de,
+            processes: dict[str, functools.partial] = {
+                "de": functools.partial(
+                    get_page,
+                    *(
+                        constants.WIKIDUMP_DE,
                         row.title,
                         row.start,
                         row.end,
-                        return_dict,
-                        "de",
                     ),
                 ),
-                "en": Process(
-                    target=get_page,
-                    args=(
-                        wikidump_en,
-                        row_en.title,
-                        row_en.start,
-                        row_en.end,
-                        return_dict,
-                        "en",
+                "en": (
+                    functools.partial(
+                        get_page,
+                        *(
+                            constants.WIKIDUMP_EN,
+                            row_en.title,
+                            row_en.start,
+                            row_en.end,
+                        ),
                     )
-                ) if not row_en.empty else None,
-                "api": Process(target=api_call, args=(row.title, return_dict)),
+                    if not row_en.empty
+                    else None
+                ),
+                "api": functools.partial(api_call, row.title),
             }
 
-            for process in processes.values():
-                if process:
-                    process.start()
-            for process in processes.values():
-                if process:
-                    process.join()
+            page: list
+            with Pool(3) as pool:
+                page = pool.map(foo, processes.values())
                 
-            page = return_dict
-            
-            data = ((
+                pool.close()
+                
+            page: dict = dict(zip(("de", "en", "api"), page))
+
+
+            data = (
+                (
                     original_articles[row.title],
                     row.title,
                     row_en.title if not row_en.empty else "",
-                    id),
-                    (
+                    id,
+                ),
+                (
                     page["de"]["revision"]["text"]["#text"],
                     page["en"]["revision"]["text"]["#text"] if "en" in page else "",
                     page["api"].get("extract", ""),
-                    page["api"].get("originalimage", {}).get("source", ""))
+                    page["api"].get("originalimage", {}).get("source", ""),
+                ),
             )
 
             db[0].executemany(
                 f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                ([*data[0], ep, *data[1]] for ep in episodes_dict.getlist(row.title))
+                ([*data[0], ep, *data[1]] for ep in episodes_dict.getlist(row.title)),
             )
-            
-            if i % 50 == 0:
+
+            if iterations % 50 == 0:
                 db[1].commit()
-            bar()
-            if i == 5:
+            if iterations == 18:
                 break
+            bar()
+            iterations += 1
             
+        
     db[1].commit()
 
     wikidump_de.close()
     wikidump_en.close()
+    
 
     return
     # with alive_bar(len(articles), title=f"{mode.removesuffix('e')}ing articles") as bar:
