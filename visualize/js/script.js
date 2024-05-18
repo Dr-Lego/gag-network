@@ -134,7 +134,7 @@ function showNodeInfo(node) {
 }
 
 function showEdgeInfo(a, b) {
-  let text = DATA.meta.text[a];
+  let text = DATA.meta.text[a][DATA.meta.links[`${a} -> ${b}`].lang];
   let link_context = DATA.meta.links[`${a} -> ${b}`].context;
   let link_text = DATA.meta.links[`${a} -> ${b}`].text;
   let text_index = text.search(link_context.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));

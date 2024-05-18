@@ -2,6 +2,7 @@ from scraping._Database import Database
 import pandas as pd
 import argparse
 from selenium import webdriver
+import sys
 from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
@@ -11,11 +12,17 @@ import wikitextparser as wtp
 from alive_progress import alive_bar
 import re
 
+
+"""
+Create nodes and edges of the network and pre-load the network.
+"""
+
+
 edges: list
 nodes: list
 categories: dict
 links: pd.DataFrame
-link_texts: pd.DataFrame
+all_links: pd.DataFrame
 titles: pd.DataFrame
 articles: pd.DataFrame
 episodes: pd.DataFrame
@@ -43,18 +50,18 @@ def get_icon(title: str) -> str:
 
 
 def get_dataframes():
-    global links, link_texts, titles, articles, episodes, categories
+    global links, all_links, titles, articles, episodes, categories
     db = Database()
-    link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
+    link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
         WHERE url IN (SELECT title FROM articles)
-        GROUP BY url having count(url) <= 50)"""
+        GROUP BY url having count(url) <= 500)"""
 
-    links = pd.read_sql(link_filter, con=db.conn)
+    links = pd.read_sql(link_filter.format("url, parent, lang"), con=db.conn)
     links = links.sort_values(links.columns.to_list()).drop_duplicates(
         links.columns.drop("lang"), keep="first"
     )
-    link_texts = pd.read_sql("SELECT * FROM links", con=db.conn)
+    all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
     articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
@@ -173,9 +180,9 @@ def get_metadata() -> dict:
     with alive_bar(len(links.index), title="preparing link metadata") as bar:
         for i, a in links.iterrows():
             if f"{a.parent} -> {a.url}" not in meta["links"]:
-                link = link_texts.loc[
+                link = all_links.loc[
                     np.logical_and(
-                        link_texts["parent"] == a.parent, link_texts["url"] == a.url
+                        all_links["parent"] == a.parent, all_links["url"] == a.url
                     )
                 ].iloc[0]
                 meta["links"][f"{a.parent} -> {a.url}"] = {
@@ -184,6 +191,7 @@ def get_metadata() -> dict:
                         articles.loc[articles["title"] == a.parent].iloc[0].content,
                         link.wikitext,
                     ),
+                    "lang": link.lang
                 }
                 bar()
     return meta
@@ -230,24 +238,16 @@ def create_save():
             f.write(f"const SAVE = {save};")
     finally:
         driver.quit()
-
-
+        
+        
+        
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--data",
-        help="nodes and edges are refreshed",
-        default=True,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--save",
-        help="a new network save is created",
-        default=True,
-        action=argparse.BooleanOptionalAction,
-    )
-    args = parser.parse_args()
-    if args.data:
+    args = sys.argv[1:]
+    if len(args) == 0:
         refresh_data()
-    if args.save:
         create_save()
+    else:
+        options = ["--data", "--save"]
+        for option in options:
+            if option in args:
+                {"--data": refresh_data, "--save": create_save()}[option]()
