@@ -1,31 +1,13 @@
-from multiprocessing import Pool
-import functools
+import pandas as pd
 
-# -------------------------------------
+# Create a sample DataFrame
+data = {'a': [1, 1, 4, 9, 4, 9],
+        'b': [2, 2, 5, 8, 7, 8],
+        'c': [3, 3, 6, 7, 2, 7],
+        'x': ["de", "en", "en", "en", "de", "de"]}
+df = pd.DataFrame(data)
 
-def inc(x):
-    return x + 1
+# Drop duplicates based on 'a', 'b', and 'c', keeping the row with x="de"
+df = df.sort_values(['a', 'b', 'c', 'x']).drop_duplicates(['a', 'b', 'c'], keep='first')
 
-def dec(x):
-    return x - 1
-
-def add(x, y):
-    return x + y
-
-# -------------------------------------
-
-def smap(f):
-    return f()
-
-def main():
-    f_inc = functools.partial(inc, 4)
-    f_dec = functools.partial(dec, 2)
-    f_add = functools.partial(add, 3, 4)
-    with Pool() as pool:
-        res = pool.map(smap, [f_inc, f_dec, f_add])
-        print(res)
-
-# -------------------------------------
-
-if __name__ == '__main__':
-    main()
+print(df)

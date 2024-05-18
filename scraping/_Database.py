@@ -27,11 +27,6 @@ class Database(object):
         self.conn.commit()
         return (self.conn, self.c)
 
-    def insert_article(self, key:str, title: str, id:int, content: str):
-        keys, values = list(locals().keys())[1:], list(locals().values())[1:]
-        self.c.execute(f"INSERT INTO articles ({','.join(keys)}) VALUES ({','.join(len(keys)*'?')})", values)
-        self.conn.commit()
-
     def close(self):
         self.conn.commit()
         self.conn.close()

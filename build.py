@@ -15,7 +15,7 @@ edges: list
 nodes: list
 categories: dict
 links: pd.DataFrame
-all_links: pd.DataFrame
+link_texts: pd.DataFrame
 titles: pd.DataFrame
 articles: pd.DataFrame
 episodes: pd.DataFrame
@@ -43,15 +43,18 @@ def get_icon(title: str) -> str:
 
 
 def get_dataframes():
-    global links, all_links, titles, articles, episodes, categories
+    global links, link_texts, titles, articles, episodes, categories
     db = Database()
     link_filter = """SELECT DISTINCT url, parent FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
         WHERE url IN (SELECT title FROM articles)
-        GROUP BY url having count(url) <= 200)"""
+        GROUP BY url having count(url) <= 50)"""
 
     links = pd.read_sql(link_filter, con=db.conn)
-    all_links = pd.read_sql("SELECT * FROM links", con=db.conn)
+    links = links.sort_values(links.columns.to_list()).drop_duplicates(
+        links.columns.drop("lang"), keep="first"
+    )
+    link_texts = pd.read_sql("SELECT * FROM links", con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
     articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
@@ -98,7 +101,7 @@ def get_edges() -> list:
 
 
 def get_nodes() -> list:
-    global edges
+    global edges, titles
     connected_nodes = list(
         itertools.chain.from_iterable([[e["from"], e["to"]] for e in edges])
     )
@@ -135,7 +138,7 @@ def link_context(text, link):
 
 def get_metadata() -> dict:
     global articles, links
-    meta = {"episodes": {}, "summary": {}, "thumbnail": {}, "text": {}, "links": {}}
+    meta = {"episodes": {}, "summary": {}, "thumbnail": {}, "text": {}, "links": {}, "lang": {}}
     with alive_bar(len(articles.index), title="preparing article metadata") as bar:
         for i, t in articles.iterrows():
             meta["episodes"][t.title] = meta["episodes"].get(t.title, []) + [
@@ -148,22 +151,31 @@ def get_metadata() -> dict:
             ]
             meta["summary"][t.title] = t.description
             meta["thumbnail"][t.title] = t.thumbnail
-            meta["text"][t.title] = wtp.parse(
-                re.sub(
-                    "<ref>[^<]+</ref>",
-                    " ",
-                    t.content.replace("<br />", "").replace("<br>", ""),
-                )
-            ).plain_text()
+            meta["text"][t.title] = {
+                "de": wtp.parse(
+                    re.sub(
+                        "<ref>[^<]+</ref>",
+                        " ",
+                        t.content.replace("<br />", "").replace("<br>", ""),
+                    )
+                ).plain_text(),
+                "en": wtp.parse(
+                    re.sub(
+                        "<ref>[^<]+</ref>",
+                        " ",
+                        t.content_en.replace("<br />", "").replace("<br>", ""),
+                    )
+                ).plain_text()
+            }
             bar()
 
     # link context
     with alive_bar(len(links.index), title="preparing link metadata") as bar:
         for i, a in links.iterrows():
             if f"{a.parent} -> {a.url}" not in meta["links"]:
-                link = all_links.loc[
+                link = link_texts.loc[
                     np.logical_and(
-                        all_links["parent"] == a.parent, all_links["url"] == a.url
+                        link_texts["parent"] == a.parent, link_texts["url"] == a.url
                     )
                 ].iloc[0]
                 meta["links"][f"{a.parent} -> {a.url}"] = {
@@ -189,23 +201,31 @@ def refresh_data():
             "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
         )
         f.close()
-        
+
+
 class wait_for_stabilized(object):
     def __init__(self) -> None:
         pass
-    
+
     def __call__(self, driver: webdriver.Chrome):
         return driver.execute_script("return stabilized;")
-        
+
+
 def create_save():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/save/prepare.html")
     try:
-        print("Please be patient while a save is being created. This can take up to a few minutes.")
+        print(
+            "Please be patient while a save is being created. This can take up to a few minutes."
+        )
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
-        save = json.dumps(driver.execute_script("return exportNetwork();"), separators=(",", ":"), ensure_ascii=False)
+        save = json.dumps(
+            driver.execute_script("return exportNetwork();"),
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
         with open("visualize/data/save.js", "w", encoding="utf-8") as f:
             f.write(f"const SAVE = {save};")
     finally:
@@ -214,8 +234,18 @@ def create_save():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", help="nodes and edges are refreshed", default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument("--save", help="a new network save is created", default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument(
+        "--data",
+        help="nodes and edges are refreshed",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--save",
+        help="a new network save is created",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+    )
     args = parser.parse_args()
     if args.data:
         refresh_data()
