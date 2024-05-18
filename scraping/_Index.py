@@ -1,12 +1,8 @@
-from bz2 import BZ2File, BZ2Decompressor
-from bs4 import BeautifulSoup
-from typing import Iterable
+from bz2 import BZ2File
 from pathlib import Path
-import pandas as pd
 import sqlite3
 from alive_progress import alive_bar
 import os
-import constants
 
 
 class Index(object):
@@ -40,8 +36,8 @@ class Index(object):
                     l = l.decode().removesuffix("\n")
                     if len(l):
                         l = l.split(":")
+                        # id, title, start
                         l = [l[1], ":".join(l[2:]), l[0]]
-                        cache.append(l)
                         if l[2] != pos:
                             pos = l[2]
                             self.c.executemany(
@@ -49,6 +45,7 @@ class Index(object):
                                 (r + [pos] for r in cache),
                             )
                             cache = []
+                        cache.append(l)
                     else:
                         print("end")
                         self.c.executemany(
@@ -75,47 +72,37 @@ class Index(object):
         self.conn.close()
 
 
-import timeit
-import multiprocessing
+# import timeit
+# import multiprocessing
+# import xmltodict
 
 
-# import xml.etree.ElementTree as ET
-# import bz2
+# # import xml.etree.ElementTree as ET
+# # import bz2
 
 
-# i = Index(constants.WIKIDUMP_EN_INDEX)
+# i = Index(constants.WIKIDUMP_DE_INDEX)
 
-# positions = pd.read_sql(
-#     f"SELECT * FROM pages WHERE title LIKE 'Alexandria'",
+# TITLE = "Charles Lindbergh"
+
+# pos = pd.read_sql(
+#     f"SELECT * FROM pages WHERE title LIKE '{TITLE}'",
 #     i.conn,
-# )
-# print(positions)
+# ).iloc[0]
+# print(pos)
+
+
+# def get_page(path: str, title: str, start_byte: int, end_byte: int):
+#     with open(path, "rb") as file:
+#         file.seek(start_byte)
+#         readback = file.read(end_byte - start_byte - 1)
+#         file.close()
+#     page_xml = BZ2Decompressor().decompress(readback).decode()
+#     soup = BeautifulSoup(page_xml, "lxml")
+#     page = soup.find("title", string=title).parent
+#     print(title, path)
+#     return xmltodict.parse(str(page))["page"]
+
+# print(get_page(constants.WIKIDUMP_DE, TITLE, pos.start, pos.end))
 
 # i.close()
-
-# n = 0
-# def get(pos):
-#     start, end = pos
-#     with open(constants.WIKIDUMP_EN, "rb") as f:
-#         f.seek(start)
-#         readback = f.read(end - start - 1)
-#         page_xml = BZ2Decompressor().decompress(readback).decode()
-#         f.close()
-#     n+=1
-#     print(n, end=" ")
-
-
-# # 
-# # with open("test.xml", "w") as f:
-# #     f.write(get_wikitext(constants.WIKIDUMP_EN, 17584220))
-# #     f.close()
-
-# start_time = timeit.default_timer()
-
-# with multiprocessing.Pool(10) as pool:
-#     pool.map(get, [(17584220,18505627)]*1000)
-
-# end_time = timeit.default_timer()
-# print("Time taken:", end_time - start_time, "seconds")
-
-# print(n, end=" ")

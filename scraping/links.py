@@ -1,51 +1,53 @@
 import wikitextparser as wtp
 import pandas as pd
 import sqlite3
-import json
 from alive_progress import alive_bar
 from scraping._Database import Database
 
 
-def context(text) -> dict:
-    refs = wtp.parse(text).get_tags("ref")
-    for ref in refs:
-        text = text.replace(str(ref), "")
-    wikitext = wtp.parse(text)
-    # if not len(links):
-    #     links = [a.target for a in wikitext.wikilinks]
-    contexts = {}
-    for s in wikitext.sections:
-        text = s.plain_text()
-        #results = s.wikilinks#[a for a in s.wikilinks if a.target in links]
-        for link in s.wikilinks:
-            #.replace(link.plain_text(), f"[[{link.plain_text()}]]")
-            #text = "\n".join([l for l in text.split("\n") if not l.startswith("==") and not l.endswith("==")])
-            contexts[link.target] = contexts.get(link.target, []) + [text]
-    return {"parsed": wikitext, "contexts": contexts}
-
-
-def scrape_links(con:sqlite3.Connection):
-    articles = pd.read_sql("SELECT * FROM articles", con=con)
+def scrape_links(con: sqlite3.Connection):
+    articles = pd.read_sql(
+        "SELECT DISTINCT key, title, title_en, id, content, content_en, description, thumbnail FROM articles",
+        con=con,
+    )
+    translations = {
+        en: de[0]
+        for en, de in pd.read_sql(
+            "SELECT DISTINCT title, title_en FROM articles", con=con
+        )
+        .set_index("title_en")
+        .T.to_dict("list")
+        .items()
+    }
     links: list[dict] = []
 
     with alive_bar(len(articles.index), title="refreshing links") as bar:
         for i, article in articles.iterrows():
-            #try:
-            #parsed, contexts = list(context(article["content"]).values())
             parsed = wtp.parse(article["content"])
             for a in parsed.wikilinks:
-                links.append({
-                    "url": a.target,
-                    "text": a.text if a.text else a.target,
-                    "parent": article["title"],
-                    "wikitext": str(a),
-                    #"context": json.dumps(contexts[a.target])
-                })
-            # except:
-            #     print("\033[91m", f"{i+1}  {article['title']}", "\033[0m")
+                links.append(
+                    {
+                        "url": a.target,
+                        "text": a.text if a.text else a.target,
+                        "parent": article["title"],
+                        "wikitext": str(a),
+                        "lang": "de",
+                    }
+                )
+            if article["content_en"]:
+                parsed = wtp.parse(article["content_en"])
+                for a in parsed.wikilinks:
+                    links.append(
+                        {
+                            "url": translations.get(a.target, a.target),
+                            "text": a.text if a.text else a.target,
+                            "parent": article["title"],
+                            "wikitext": str(a),
+                            "lang": "en",
+                        }
+                    )
+
             bar()
-
-
 
     links = [dict(t) for t in {tuple(d.items()) for d in links}]
     df = pd.DataFrame(links)
@@ -61,5 +63,5 @@ def refresh_links(*args):
     r = scrape_links(db.conn)
 
     db.close()
-    
+
     return r

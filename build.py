@@ -118,6 +118,7 @@ def get_nodes() -> list:
 
 
 def link_context(text, link):
+    # get small context of link to find correct loaction in plaintext article
     wikitext = wtp.parse(text)
     link = wtp.parse(link).wikilinks[0]
     text = wikitext.plain_text(replace_wikilinks=False)
@@ -156,6 +157,7 @@ def get_metadata() -> dict:
             ).plain_text()
             bar()
 
+    # link context
     with alive_bar(len(links.index), title="preparing link metadata") as bar:
         for i, a in links.iterrows():
             if f"{a.parent} -> {a.url}" not in meta["links"]:
