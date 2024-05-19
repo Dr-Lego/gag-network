@@ -69,7 +69,7 @@ def get_dataframes():
     all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
     articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
-    translations = pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).set_index("title").to_dict("index")
+    translations = dict(pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).values)
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
     categories_df = pd.read_sql(
         "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
@@ -189,7 +189,7 @@ def link_meta(args):
     r = (f"{a.parent} -> {a.url}", {
         "text": link.text,
         "context": link_context(
-            articles.loc[articles["title"] == a.parent].iloc[0].content,
+            articles.loc[articles["title"] == a.parent].iloc[0][f"content{['', '_en'][link.lang == 'en']}"],
             link.wikitext,
         ),
         "lang": link.lang,
