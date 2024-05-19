@@ -1,8 +1,11 @@
 from scraping._Database import Database
 import pandas as pd
+from collections import defaultdict
 import argparse
 from selenium import webdriver
 import sys
+import numpy as np
+from multiprocessing import Pool, Manager
 from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
@@ -55,7 +58,7 @@ def get_dataframes():
     link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
         WHERE url IN (SELECT title FROM articles)
-        GROUP BY url having count(url) <= 500)"""
+        GROUP BY url having count(url) <= 5000)"""
 
     links = pd.read_sql(link_filter.format("url, parent, lang"), con=db.conn)
     links = links.sort_values(links.columns.to_list()).drop_duplicates(
@@ -143,41 +146,50 @@ def link_context(text, link):
     return text
 
 
+def article_meta(args):
+    global articles, links, episodes
+    t = pd.Series(args[1])
+    meta = {}
+    meta["episodes"] = (t.title, t.episode.split(","))
+    meta["summary"] = (t.title, t.description)
+    meta["thumbnail"] = (t.title, t.thumbnail)
+    meta["text"] = (
+        t.title,
+        {
+            "de": wtp.parse(
+                re.sub(
+                    "<ref>[^<]+</ref>",
+                    " ",
+                    t.content.replace("<br />", "").replace("<br>", ""),
+                )
+            ).plain_text(),
+            "en": wtp.parse(
+                re.sub(
+                    "<ref>[^<]+</ref>",
+                    " ",
+                    t.content_en.replace("<br />", "").replace("<br>", ""),
+                )
+            ).plain_text(),
+        },
+    )
+    return meta
+
+
 def get_metadata() -> dict:
     global articles, links
-    meta = {"episodes": {}, "summary": {}, "thumbnail": {}, "text": {}, "links": {}, "lang": {}}
-    with alive_bar(len(articles.index), title="preparing article metadata") as bar:
-        for i, t in articles.iterrows():
-            meta["episodes"][t.title] = meta["episodes"].get(t.title, []) + [
-                {
-                    k: list(v.values())[0]
-                    for k, v in episodes.loc[episodes["nr"] == t.episode]
-                    .to_dict()
-                    .items()
-                }
-            ]
-            meta["summary"][t.title] = t.description
-            meta["thumbnail"][t.title] = t.thumbnail
-            meta["text"][t.title] = {
-                "de": wtp.parse(
-                    re.sub(
-                        "<ref>[^<]+</ref>",
-                        " ",
-                        t.content.replace("<br />", "").replace("<br>", ""),
-                    )
-                ).plain_text(),
-                "en": wtp.parse(
-                    re.sub(
-                        "<ref>[^<]+</ref>",
-                        " ",
-                        t.content_en.replace("<br />", "").replace("<br>", ""),
-                    )
-                ).plain_text()
-            }
-            bar()
+    meta = {"links": {}}
+    with Pool() as pool:
+        _meta = pool.map(article_meta, articles.to_dict("index").items())
+        pool.close()
+    meta.update({k: dict([d[k] for d in _meta if k in d]) for k in set().union(*_meta)})
+    del _meta
 
     # link context
+    with Pool() as pool:
+        _meta = pool.map(article_meta, articles.to_dict("index").items())
+        pool.close()
     with alive_bar(len(links.index), title="preparing link metadata") as bar:
+        [links.to_dict("index").items()]
         for i, a in links.iterrows():
             if f"{a.parent} -> {a.url}" not in meta["links"]:
                 link = all_links.loc[
@@ -191,7 +203,7 @@ def get_metadata() -> dict:
                         articles.loc[articles["title"] == a.parent].iloc[0].content,
                         link.wikitext,
                     ),
-                    "lang": link.lang
+                    "lang": link.lang,
                 }
                 bar()
     return meta
@@ -238,9 +250,8 @@ def create_save():
             f.write(f"const SAVE = {save};")
     finally:
         driver.quit()
-        
-        
-        
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) == 0:

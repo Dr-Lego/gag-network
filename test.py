@@ -1,13 +1,10 @@
 import pandas as pd
 
 # Create a sample DataFrame
-data = {'a': [1, 1, 4, 9, 4, 9],
-        'b': [2, 2, 5, 8, 7, 8],
-        'c': [3, 3, 6, 7, 2, 7],
-        'x': ["de", "en", "en", "en", "de", "de"]}
+data = {'i': [0, 1, 2, 3], 'a': [1, 45, 5, 6], 'b': [2, 6, 9, 9], 'c': [3, 8, 3, 34]}
 df = pd.DataFrame(data)
 
-# Drop duplicates based on 'a', 'b', and 'c', keeping the row with x="de"
-df = df.sort_values(['a', 'b', 'c', 'x']).drop_duplicates(['a', 'b', 'c'], keep='first')
+# Convert the DataFrame to a dictionary
+result_dict = df.set_index('i').to_dict('index')
 
-print(df)
+print(result_dict)

@@ -5,3 +5,5 @@ Pierre de Coubertin - Getrennte Bestattung
 Friedrich Accum > Antoine Laurent de Lavoisier
 John DeLorean > Charles Lindbergh
 Londoner Kutschenstreit > Samuel Pepys
+Alois Alzheimer > Heinrich Hoffmann
+Geschichte Hamburgs > Formosus

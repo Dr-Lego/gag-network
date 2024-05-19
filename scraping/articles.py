@@ -25,6 +25,7 @@ index_en: Index
 def foo(f):
     return f()
 
+
 def none(*args):
     return None
 
@@ -171,24 +172,19 @@ def scrape_articles(
             if not page["en"]:
                 del page["en"]
 
-            data = (
+            db[0].execute(
+                f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     original_articles[row.title],
                     row.title,
                     row_en.title if not row_en.empty else "",
                     id,
-                ),
-                (
+                    ",".join(episodes_dict.getlist(row.title)),
                     page["de"]["revision"]["text"]["#text"],
                     page["en"]["revision"]["text"]["#text"] if "en" in page else "",
                     page["api"].get("extract", ""),
                     page["api"].get("originalimage", {}).get("source", ""),
                 ),
-            )
-
-            db[0].executemany(
-                f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                ([*data[0], ep, *data[1]] for ep in episodes_dict.getlist(row.title)),
             )
 
             if iterations % 50 == 0:
