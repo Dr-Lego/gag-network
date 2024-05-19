@@ -14,6 +14,7 @@ function createEvents(params) {
         let node = nodesDataset.get(properties.nodes[0]);
         if (node.id == undefined) {
             dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
+            dom.title_en.innerHTML = ""
             dom.description.innerHTML = ""
             dom.episodes.innerHTML = ""
             dom.thumbnail.src = "assets/gag-logo.webp"

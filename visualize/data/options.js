@@ -3,8 +3,8 @@ const options = {
         enabled: false,
         solver: 'forceAtlas2Based',
         forceAtlas2Based: {
-            gravitationalConstant: -250,
-            springLength: 30,
+            gravitationalConstant: -400,
+            springLength: 70,
             avoidOverlap: 1
         }
     },

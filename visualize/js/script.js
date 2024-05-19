@@ -11,6 +11,7 @@ var edgesDataset = new vis.DataSet(data.edges);
 
 const dom = {
   "title": document.getElementById("title"),
+  "title_en": document.getElementById("title_en"),
   "description": document.getElementById("description"),
   "episodes": document.getElementById("episodes"),
   "thumbnail": document.getElementById("thumbnail"),
@@ -61,6 +62,7 @@ function draw() {
 function showNodeInfo(node) {
   currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
+  dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(DATA.meta.translations[node.id.replaceAll(" ", "_")])}" target="_blank">${DATA.meta.translations[node.id]}</a>`
   dom.description.innerHTML = DATA.meta.summary[node.id]
   dom.thumbnail.src = DATA.meta.thumbnail[node.id];
 
@@ -76,7 +78,7 @@ function showNodeInfo(node) {
   episode_display = []
   for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
     const episode = DATA.meta.episodes[node.id][i];
-    episode_display.push(`<a class="episode-link" href=${JSON.parse(episode.links.replaceAll("'", '"'))[0]} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
+    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
   };
   dom.episodes.innerHTML = episode_display.join("");
   dom.episodes_number.innerText = `(${episode_display.length})`

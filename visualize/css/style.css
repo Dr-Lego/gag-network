@@ -113,7 +113,7 @@ body {
     transition: all 0.4s ease-in-out;
 }
 
-#info:hover{
+#info:hover {
     opacity: 0.5 !important;
 }
 
@@ -121,18 +121,22 @@ hr {
     color: rgb(240, 240, 240);
 }
 
-#title {
+.title {
     margin: 10px;
     margin-top: 20px;
     font-size: xx-large;
 }
 
-#title>a {
+#title_en {
+    height: min-content;
+}
+
+.title>a {
     color: rgba(0, 0, 0, 1);
     text-decoration: none;
 }
 
-#title>a:hover {
+.title>a:hover {
     /* color: rgba(0, 0, 0, 0.5); */
     color: #d34823;
     text-decoration: underline;

@@ -9,7 +9,7 @@ from multiprocessing import Pool, Manager
 from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
-import json
+import ast
 import numpy as np
 import wikitextparser as wtp
 from alive_progress import alive_bar
@@ -28,6 +28,7 @@ links: pd.DataFrame
 all_links: pd.DataFrame
 titles: pd.DataFrame
 articles: pd.DataFrame
+translations: dict
 episodes: pd.DataFrame
 edges: list
 nodes: list
@@ -45,6 +46,7 @@ def get_icon(title: str) -> str:
         "Mann": "assets/icons/person.png",
         "Krieg": "assets/icons/bomb.png",
         "Staat": "assets/icons/state.png",
+        "Millionenstadt": "assets/icons/city.png"
     }
     for c in categories.get(title, []):
         if c.split(" ")[0] in list(category_icons.keys()):
@@ -53,7 +55,7 @@ def get_icon(title: str) -> str:
 
 
 def get_dataframes():
-    global links, all_links, titles, articles, episodes, categories
+    global links, all_links, titles, articles, episodes, categories, translations
     db = Database()
     link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
@@ -67,6 +69,7 @@ def get_dataframes():
     all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
     articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
+    translations = pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).set_index("title").to_dict("index")
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
     categories_df = pd.read_sql(
         "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
@@ -147,10 +150,11 @@ def link_context(text, link):
 
 
 def article_meta(args):
-    global articles, links, episodes
+    global articles, links, episodes, translations
     t = pd.Series(args[1])
     meta = {}
-    meta["episodes"] = (t.title, t.episode.split(","))
+    eps = episodes.loc[episodes["nr"].isin(t.episode.split(","))]
+    meta["episodes"] = (t.title, [{"nr": ep.nr, "title": ep.title, "link": ast.literal_eval(ep.links)[0]} for i, ep in eps.iterrows()])
     meta["summary"] = (t.title, t.description)
     meta["thumbnail"] = (t.title, t.thumbnail)
     meta["text"] = (
@@ -175,6 +179,7 @@ def article_meta(args):
     return meta
 
 def link_meta(args):
+    global all_links, articles
     a = pd.Series(dict(zip(("url", "parent"), args)))
     link = all_links.loc[
         np.logical_and(
@@ -194,7 +199,7 @@ def link_meta(args):
 
 def get_metadata() -> dict:
     global articles, links
-    meta = {}
+    meta = {"translations": translations}
     print("Preparing article metadata...", end="\t")
     with Pool() as pool:
         _meta = pool.map(article_meta, articles.to_dict("index").items())
@@ -206,7 +211,7 @@ def get_metadata() -> dict:
     # link context
     print("Preparing link metadata...", end="\t")
     with Pool() as pool:
-        meta.update(dict(pool.map(link_meta, list(set([tuple(row) for row in links.values.tolist()])))))
+        meta.update({"links": dict(pool.map(link_meta, list(set([tuple(row) for row in links.values.tolist()]))))})
         pool.close()
     print("Done")
     
@@ -236,12 +241,12 @@ class wait_for_stabilized(object):
 
 
 def create_save():
-    print("Pre-loading network...", end="\t")
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
-    driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/save/prepare.html")
+    driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/visualize/_preload.html")
     try:
+        print("Pre-loading network...", end="\t")
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
         save = json.dumps(
             driver.execute_script("return exportNetwork();"),
@@ -264,4 +269,4 @@ if __name__ == "__main__":
         options = ["--data", "--save"]
         for option in options:
             if option in args:
-                {"--data": refresh_data, "--save": create_save()}[option]()
+                {"--data": refresh_data, "--save": create_save}[option]()
