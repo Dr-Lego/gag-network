@@ -174,38 +174,42 @@ def article_meta(args):
     )
     return meta
 
+def link_meta(args):
+    a = pd.Series(dict(zip(("url", "parent"), args)))
+    link = all_links.loc[
+        np.logical_and(
+            all_links["parent"] == a.parent, all_links["url"] == a.url
+        )
+    ].iloc[0]
+    r = (f"{a.parent} -> {a.url}", {
+        "text": link.text,
+        "context": link_context(
+            articles.loc[articles["title"] == a.parent].iloc[0].content,
+            link.wikitext,
+        ),
+        "lang": link.lang,
+    })
+    return r
+
 
 def get_metadata() -> dict:
     global articles, links
-    meta = {"links": {}}
+    meta = {}
+    print("Preparing article metadata...", end="\t")
     with Pool() as pool:
         _meta = pool.map(article_meta, articles.to_dict("index").items())
         pool.close()
     meta.update({k: dict([d[k] for d in _meta if k in d]) for k in set().union(*_meta)})
     del _meta
+    print("Done")
 
     # link context
+    print("Preparing link metadata...", end="\t")
     with Pool() as pool:
-        _meta = pool.map(article_meta, articles.to_dict("index").items())
+        meta.update(dict(pool.map(link_meta, list(set([tuple(row) for row in links.values.tolist()])))))
         pool.close()
-    with alive_bar(len(links.index), title="preparing link metadata") as bar:
-        [links.to_dict("index").items()]
-        for i, a in links.iterrows():
-            if f"{a.parent} -> {a.url}" not in meta["links"]:
-                link = all_links.loc[
-                    np.logical_and(
-                        all_links["parent"] == a.parent, all_links["url"] == a.url
-                    )
-                ].iloc[0]
-                meta["links"][f"{a.parent} -> {a.url}"] = {
-                    "text": link.text,
-                    "context": link_context(
-                        articles.loc[articles["title"] == a.parent].iloc[0].content,
-                        link.wikitext,
-                    ),
-                    "lang": link.lang,
-                }
-                bar()
+    print("Done")
+    
     return meta
 
 
@@ -232,14 +236,12 @@ class wait_for_stabilized(object):
 
 
 def create_save():
+    print("Pre-loading network...", end="\t")
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/save/prepare.html")
     try:
-        print(
-            "Please be patient while a save is being created. This can take up to a few minutes."
-        )
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
         save = json.dumps(
             driver.execute_script("return exportNetwork();"),
@@ -250,6 +252,7 @@ def create_save():
             f.write(f"const SAVE = {save};")
     finally:
         driver.quit()
+    print("Done")
 
 
 if __name__ == "__main__":
