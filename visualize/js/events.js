@@ -24,5 +24,6 @@ function createEvents(params) {
         } else {
             showNodeInfo(node)
         };
+        //neighbourhoodHighlight(properties)
     });
 }

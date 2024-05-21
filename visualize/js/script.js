@@ -2,10 +2,13 @@ const searchParams = new URLSearchParams(window.location.search)
 var allNodes;
 var network;
 var currentNode = "";
+var highlightActive = false
 var data = SAVE;
 if (searchParams.has("new")) {
   data = DATA;
 };
+const nodeColor = "RGB(230, 145, 0)"
+const secondNodeColor = "RGB(211, 126, 35)"
 var nodesDataset = new vis.DataSet(data.nodes);
 var edgesDataset = new vis.DataSet(data.edges);
 
@@ -43,11 +46,13 @@ function draw() {
 
   network = new vis.Network(container, _data, options);
   if (searchParams.has("new")) {
-    network.stabilize(1000)
-  }else{
+    network.stabilize(2000)
+  } else {
     document.body.removeAttribute("style")
     document.getElementById('loading-container').style.display = "none"
   }
+
+  allNodes = nodesDataset.get({ returnType: "Object" });
 
   createEvents()
 
@@ -62,7 +67,7 @@ function draw() {
 function showNodeInfo(node) {
   currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
-  dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(DATA.meta.translations[node.id.replaceAll(" ", "_")])}" target="_blank">${DATA.meta.translations[node.id]}</a>`
+  dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(DATA.meta.translations[node.id].replaceAll(" ", "_"))}" target="_blank">${DATA.meta.translations[node.id]}</a>`
   dom.description.innerHTML = DATA.meta.summary[node.id]
   dom.thumbnail.src = DATA.meta.thumbnail[node.id];
 
@@ -259,6 +264,83 @@ function focus_edge(a, b) {
     }
   });
 }
+
+function neighbourhoodHighlight(params) {
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (var nodeId in allNodes) {
+      allNodes[nodeId].color = "rgb(230,230,230)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = "";
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      allNodes[allConnectedNodes[i]].color = secondNodeColor;
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      allNodes[connectedNodes[i]].color = nodeColor;
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    allNodes[selectedNode].color = nodeColor;
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // reset all nodes
+    for (var nodeId in allNodes) {
+      allNodes[nodeId].color = nodeColor;
+      if (allNodes[nodeId].hiddenLabel !== "") {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  for (nodeId in allNodes) {
+    if (allNodes.hasOwnProperty(nodeId)) {
+      updateArray.push(allNodes[nodeId]);
+    }
+  }
+  nodesDataset.update(updateArray);
+}
+
 
 
 draw()

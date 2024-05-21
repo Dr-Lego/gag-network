@@ -8,3 +8,4 @@ Londoner Kutschenstreit > Samuel Pepys
 Alois Alzheimer > Heinrich Hoffmann
 Geschichte Hamburgs > Formosus
 Benvenuto Cellini > Ian Fleming
+Ernest Shackleton > Martin Frobisher
