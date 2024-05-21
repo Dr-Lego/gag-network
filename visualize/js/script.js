@@ -165,8 +165,16 @@ function showEdgeInfo(a, b) {
   context = context.join(" ")
   context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
   dom.context.innerHTML = context
-  dom.context_title.innerText = `${a} > ${b}`
+  dom.context_title.innerHTML = `<span class='theme-link'>${a}</span> > <span class='theme-link'>${b}</span>`
   dom.info.style.opacity = 1
+
+  //event listener for theme link
+  $(".theme-link").click(
+    function(){
+      showNodeInfo(nodesDataset.get($(this).text()));
+      network.selectNodes([$(this).text()])
+    }
+  )
 }
 
 

@@ -113,9 +113,9 @@ body {
     transition: all 0.4s ease-in-out;
 }
 
-#info:hover {
+/* #info:hover {
     opacity: 0.5 !important;
-}
+} */
 
 hr {
     color: rgb(240, 240, 240);
@@ -197,7 +197,6 @@ hr {
     margin-right: 8px;
 }
 
-
 .connections-wrapper {
     margin-top: 20px;
     display: flex;
@@ -269,6 +268,15 @@ h3 {
 #context-title {
     margin: 0 !important;
     margin-bottom: 10px;
+}
+
+.theme-link {
+    cursor: pointer;
+}
+
+.theme-link:hover{
+    color: #d34823;
+    text-decoration: underline;
 }
 
 #sidebar-data {

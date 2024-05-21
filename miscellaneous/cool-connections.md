@@ -13,3 +13,4 @@ Gregor MacGregor > Xenophon
 Franz Anton Mesmer > Joseph Haydn
 Wilhelm Herschel > Joseph Haydn
 Barbara von Cilli > Helene Kottannerin
+Joseph Priestley > Naturkautschuk
