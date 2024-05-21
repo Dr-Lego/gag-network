@@ -162,11 +162,6 @@ hr {
 }
 
 
-.episode-index {
-    color: grey;
-    margin-right: 8px;
-}
-
 #description {
     margin: 10px;
     margin-top: 0;
@@ -196,6 +191,12 @@ hr {
     color: #d34823;
     text-decoration: underline;
 }
+
+.episode-index {
+    color: grey;
+    margin-right: 8px;
+}
+
 
 .connections-wrapper {
     margin-top: 20px;

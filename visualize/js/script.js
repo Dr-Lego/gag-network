@@ -130,6 +130,8 @@ function showNodeInfo(node) {
   // edge event listener
   $(".connection").click(function () {
     let a; let b;
+    $(".connection").removeAttr("style");
+    $(this).attr("style", "color:#d34823 !important");
     if (this.parentElement.id.includes("to")) {
       a = currentNode; b = this.innerText;
     } else {

@@ -24,7 +24,7 @@ const options = {
     edges: {
         arrows: { to: { scaleFactor: 0.8 }, from: { scaleFactor: 0.8 } },
         color: {
-            color: "RGBA(211, 170, 126, 0.9)",//"RGBA(232, 139, 39, 0.5)",
+            color: "RGBA(211, 170, 126, 0.8)",//"RGBA(232, 139, 39, 0.5)",
             hover: "RGBA(211, 170, 126, 1)",
             highlight: "RGBA(211, 170, 126, 1)",
             inherit: false,
@@ -43,7 +43,7 @@ const options = {
         dragNodes: false
     },
     configure: {
-        enabled: true,
+        enabled: false,
         showButton: true
-}
+    }
 };

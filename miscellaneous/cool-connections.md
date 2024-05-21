@@ -9,3 +9,7 @@ Alois Alzheimer > Heinrich Hoffmann
 Geschichte Hamburgs > Formosus
 Benvenuto Cellini > Ian Fleming
 Ernest Shackleton > Martin Frobisher
+Gregor MacGregor > Xenophon
+Franz Anton Mesmer > Joseph Haydn
+Wilhelm Herschel > Joseph Haydn
+Barbara von Cilli > Helene Kottannerin

@@ -1,5 +1,5 @@
 
-function createEvents(params) {
+function createEvents() {
     network.on("stabilizationProgress", function (params) {
         document.getElementById('loading').innerText = `${Math.round((params.iterations / params.total) * 100).toString()}%`
     });
@@ -9,10 +9,16 @@ function createEvents(params) {
         document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
     });
 
-    network.on('click', function (properties) {
+    network.on('click', function (params) {
         document.activeElement.blur()
-        let node = nodesDataset.get(properties.nodes[0]);
-        if (node.id == undefined) {
+        let node = nodesDataset.get(params.nodes[0]);
+        let edge = edgesDataset.get(params.edges[0]);
+        if (node.id) {
+            showNodeInfo(node);
+        } else if (edge.id) {
+            showNodeInfo(nodesDataset.get(edge.from));
+            showEdgeInfo(edge.from, edge.to);
+        } else {
             dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
             dom.title_en.innerHTML = ""
             dom.description.innerHTML = ""
@@ -21,8 +27,6 @@ function createEvents(params) {
             dom.sidebar_data.style.display = "none";
             dom.info.style.opacity = 0
             currentNode = ""
-        } else {
-            showNodeInfo(node)
         };
         //neighbourhoodHighlight(properties)
     });
