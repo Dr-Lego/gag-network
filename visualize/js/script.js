@@ -1,4 +1,3 @@
-const searchParams = new URLSearchParams(window.location.search)
 var allNodes;
 var network;
 var currentNode = "";
@@ -9,10 +8,12 @@ if (searchParams.has("new")) {
 };
 const nodeColor = "RGB(230, 145, 0)"
 const secondNodeColor = "RGB(211, 126, 35)"
-var nodesDataset = new vis.DataSet(data.nodes);
+var nodesDataset = new vis.DataSet(data.nodes.filter(node => !exclude.includes(node.id)));
 var edgesDataset = new vis.DataSet(data.edges);
 
 const dom = {
+  "intro": document.getElementById("intro"),
+  "stats": document.getElementById("stats"),
   "title": document.getElementById("title"),
   "title_en": document.getElementById("title_en"),
   "description": document.getElementById("description"),
@@ -45,7 +46,7 @@ function draw() {
   };
 
   network = new vis.Network(container, _data, options);
-  if (searchParams.has("new")) {
+  if (searchParams.has("new") || searchParams.has("exclude")) {
     network.stabilize(2000)
   } else {
     document.body.removeAttribute("style")
@@ -53,6 +54,8 @@ function draw() {
   }
 
   allNodes = nodesDataset.get({ returnType: "Object" });
+
+  stats.innerHTML = `<b>Themen:</b>   ${Object.keys(nodesDataset._data).length}<br><b>Verbindungen:</b>  ${DATA.edges.length}`
 
   createEvents()
 
@@ -62,6 +65,7 @@ function draw() {
     option.setAttribute('value', item);
     dom.search_suggestions.appendChild(option);
   });
+
 }
 
 function showNodeInfo(node) {

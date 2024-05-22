@@ -153,6 +153,34 @@ hr {
 }
 
 
+#intro h2 {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#intro p a {
+    color: #d34823 !important;
+    text-decoration: none;
+}
+
+#intro a:hover {
+    color: #d34823 !important;
+    text-decoration: underline;
+}
+
+#stats {
+    text-align: center;
+    position: absolute;
+    bottom: 2.5%;
+    margin: -10px;
+    border-top: 2px solid rgb(240, 240, 240);
+    width: 18%;
+    color: grey;
+    font-size: medium;
+    padding: 20px;
+}
+
+
 #episodes-wrapper {
     margin-top: 20px;
     padding: 10px;

@@ -14,12 +14,15 @@ function createEvents() {
         let node = nodesDataset.get(params.nodes[0]);
         let edge = edgesDataset.get(params.edges[0]);
         if (node.id) {
+            dom.intro.style.display = "none"
             showNodeInfo(node);
         } else if (edge.id) {
+            dom.intro.style.display = "none"
             showNodeInfo(nodesDataset.get(edge.from));
             showEdgeInfo(edge.from, edge.to);
         } else {
-            dom.title.innerHTML = "Geschichten aus der Geschichten<br>»Flickenteppich«"
+            dom.intro.style.display = "block"
+            dom.title.innerHTML = ""
             dom.title_en.innerHTML = ""
             dom.description.innerHTML = ""
             dom.episodes.innerHTML = ""
