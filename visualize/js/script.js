@@ -69,6 +69,7 @@ function draw() {
 }
 
 function showNodeInfo(node) {
+  dom.intro.style.display = "none"
   currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
   dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(DATA.meta.translations[node.id].replaceAll(" ", "_"))}" target="_blank">${DATA.meta.translations[node.id]}</a>`
@@ -147,6 +148,7 @@ function showNodeInfo(node) {
 }
 
 function showEdgeInfo(a, b) {
+  dom.intro.style.display = "none"
   let text = DATA.meta.text[a][DATA.meta.links[`${a} -> ${b}`].lang];
   let link_context = DATA.meta.links[`${a} -> ${b}`].context;
   let link_text = DATA.meta.links[`${a} -> ${b}`].text;
@@ -160,12 +162,17 @@ function showEdgeInfo(a, b) {
   context = context.substring(Math.max(0, text_index - 400), Math.min(context.length - 1, text_index + 400)); // get more accurate context of word 
   let sentences = nlp(context).sentences().json()
   context = []
-  for (let i = 1; i < sentences.length - 1; i++) {
-    const sent = sentences[i];
-    if (!sent.text.startsWith("==") && !sent.text.endsWith("==")) {
-      context.push(sent.text)
-    }
-  };
+  if (text_index == -1) {
+    context.push("<br>Keine Vorschau verfügbar.<br>")
+  } else {
+    for (let i = 1; i < sentences.length - 1; i++) {
+      const sent = sentences[i];
+      if (!sent.text.startsWith("==") && !sent.text.endsWith("==")) {
+        context.push(sent.text)
+      }
+    };
+  }
+
   context = context.join(" ")
   context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
   dom.context.innerHTML = context
@@ -174,7 +181,7 @@ function showEdgeInfo(a, b) {
 
   //event listener for theme link
   $(".theme-link").click(
-    function(){
+    function () {
       showNodeInfo(nodesDataset.get($(this).text()));
       network.selectNodes([$(this).text()])
     }
