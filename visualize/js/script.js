@@ -55,7 +55,7 @@ function draw() {
 
   allNodes = nodesDataset.get({ returnType: "Object" });
 
-  stats.innerHTML = `<b>Themen:</b>   ${Object.keys(nodesDataset._data).length}<br><b>Verbindungen:</b>  ${DATA.edges.length}`
+  stats.innerHTML = `<b>Themen:</b><nobr>   ${Object.keys(nodesDataset._data).length}<br><b>Verbindungen:</b>  ${DATA.edges.length}`
 
   createEvents()
 
