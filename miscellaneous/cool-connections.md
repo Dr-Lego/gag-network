@@ -26,6 +26,10 @@ Ian Fleming erwähnt Benvenuto Cellini merfach in seinen 'James Bond'-Romanen.
 **Ernest Shackleton → Martin Frobisher**\
 Ernest Shackleton hatte eine entfernte verwandtschaftliche Beziehung zu Martin Frobisher.
 
+**Thomas Alva Edison > »Krieg der Welten«**\
+»Edison's Conquest of Mars« wurde von Garrett P. Serviss geschrieben, einem heute kaum noch bekannten Schriftsteller, der Thomas Edison beschrieb, der einen Gegenangriff gegen die Invasoren auf dem Mars anführte. Obwohl es sich hierbei um eine Fortsetzung von »Fighters from Mars« handelt, einem überarbeiteten und nicht autorisierten Nachdruck von »The War of the Worlds«, wurden beide erstmals 1898 in der Boston Post gedruckt.\
+Ihr könnt das Buch [auf Projekt Gutenberg lesen](https://www.gutenberg.org/files/19141/19141-h/19141-h.htm)!
+
 **Franz Anton Mesmer → Joseph Haydn**\
 im Januar 1768 heiratete er Maria Anna von Posch. Sie zogen in Wien in die Landstraße 261 und pflegten wegen Mesmers Liebe zur Musik Umgang mit Christoph Willibald Gluck, Joseph Haydn, Leopold Mozart und dem damals bereits als Wunderkind gefeierten Wolfgang Amadeus Mozart. 
 
