@@ -25,9 +25,13 @@ index_en: Index
 def foo(f):
     return f()
 
-
 def none(*args):
     return None
+
+def make_request(titles):
+    return json.loads(requests.get(
+        f"https://de.wikipedia.org/w/api.php?action=query&prop=langlinks&titles={'|'.join(titles)}&lllang=en&formatversion=2&lllimit=max&format=json&redirects="
+    ).text)["query"]
 
 
 def in_english(articles: list) -> list[dict]:
@@ -37,13 +41,11 @@ def in_english(articles: list) -> list[dict]:
         np.arange(0, len(articles), 50),
     )[1:]
     r: list[dict] = []
-    with alive_bar(len(chunks), title="fetching redirects + translations") as bar:
-        for chunk in chunks:
-            query = requests.get(
-                f"https://de.wikipedia.org/w/api.php?action=query&prop=langlinks&titles={'|'.join(chunk)}&lllang=en&formatversion=2&lllimit=max&format=json&redirects="
-            ).text
-            r.append(json.loads(query)["query"])
-            bar()
+    with Pool() as pool:
+        with alive_bar(len(chunks), title="fetching redirects and translations") as bar:
+            for _ in pool.imap_unordered(make_request, chunks):
+                r.append(_)
+                bar()
 
     pages = list(itertools.chain.from_iterable([chunk.get("pages", []) for chunk in r]))
     redirected = list(
@@ -102,6 +104,7 @@ def scrape_articles(
         articles = list([a for a in articles if a[1] not in _keys])
 
     translations, redirects = in_english(articles)
+
     original_articles = {redirects.get(title, title): title for nr, title in articles}
     # titles mapped to episodes
     episodes_dict: MultiDict = MultiDict(

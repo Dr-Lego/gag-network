@@ -5,6 +5,8 @@ import json
 import wikitextparser as wtp
 from scraping._Database import Database
 
+test = "test"
+TEST = "test"
 
 def scrape_episodes() -> pd.DataFrame:
     response = requests.get("https://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&titles=Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste").text

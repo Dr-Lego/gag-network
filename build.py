@@ -1,11 +1,9 @@
 from scraping._Database import Database
 import pandas as pd
-from collections import defaultdict
-import argparse
 from selenium import webdriver
 import sys
 import numpy as np
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool
 from selenium.webdriver.support.ui import WebDriverWait
 import itertools
 import json
@@ -45,6 +43,7 @@ def get_icon(title: str) -> str:
         "Frau": "assets/icons/person.png",
         "Mann": "assets/icons/person.png",
         "Krieg": "assets/icons/bomb.png",
+        "Konflikt": "assets/icons/bomb.png",
         "Staat": "assets/icons/state.png",
         "Millionenstadt": "assets/icons/city.png"
     }
