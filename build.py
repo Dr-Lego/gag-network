@@ -2,6 +2,8 @@ from scraping._Database import Database
 import pandas as pd
 from selenium import webdriver
 import sys
+import math
+import sentence_splitter
 import numpy as np
 from multiprocessing import Pool
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,6 +28,7 @@ links: pd.DataFrame
 all_links: pd.DataFrame
 titles: pd.DataFrame
 articles: pd.DataFrame
+plaintext: dict[dict]
 translations: dict
 episodes: pd.DataFrame
 edges: list
@@ -45,7 +48,7 @@ def get_icon(title: str) -> str:
         "Krieg": "assets/icons/bomb.png",
         "Konflikt": "assets/icons/bomb.png",
         "Staat": "assets/icons/state.png",
-        "Millionenstadt": "assets/icons/city.png"
+        "Millionenstadt": "assets/icons/city.png",
     }
     for c in categories.get(title, []):
         if c.split(" ")[0] in list(category_icons.keys()):
@@ -53,8 +56,28 @@ def get_icon(title: str) -> str:
     return None
 
 
+def get_plaintext(args):
+    i,t = args
+    return (t.title, {
+        "de": wtp.parse(
+            re.sub(
+                "<ref>[^<]+</ref>",
+                " ",
+                t.content.replace("<br />", "").replace("<br>", ""),
+            )
+        ).plain_text(),
+        "en": wtp.parse(
+            re.sub(
+                "<ref>[^<]+</ref>",
+                " ",
+                t.content_en.replace("<br />", "").replace("<br>", ""),
+            )
+        ).plain_text(),
+    })
+
+
 def get_dataframes():
-    global links, all_links, titles, articles, episodes, categories, translations
+    global links, all_links, titles, articles, episodes, categories, translations, plaintext
     db = Database()
     link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
@@ -68,7 +91,16 @@ def get_dataframes():
     all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
     articles = pd.read_sql("SELECT * FROM articles", con=db.conn)
-    translations = dict(pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).values)
+    plaintext = []
+    with Pool() as pool:
+        with alive_bar(len(articles.index), title="getting plaintext articles") as bar:
+            for _ in pool.imap_unordered(get_plaintext, articles.iterrows()):
+                plaintext.append(_)
+                bar()
+    plaintext = dict(plaintext)
+    translations = dict(
+        pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).values
+    )
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
     categories_df = pd.read_sql(
         "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
@@ -132,20 +164,40 @@ def get_nodes() -> list:
     return nodes
 
 
-def link_context(text, link):
-    # get small context of link to find correct loaction in plaintext article
-    wikitext = wtp.parse(text)
-    link = wtp.parse(link).wikilinks[0]
-    text = wikitext.plain_text(replace_wikilinks=False)
+def link_context(text, link: pd.Series):
+    global plaintext
+    # get small context of link to find correct location in plaintext article
+    wikitext = wtp.parse(text).plain_text(replace_wikilinks=False)
+    wikilink = wtp.parse(link.wikitext).wikilinks[0]
+    if not wikilink.text:
+        wikilink.text = wikilink.target
     try:
-        text = (
-            re.search(r"[^\]]{0,100}" + re.escape(link.string) + r"[^\[]{0,100}", text)
+        small_context = (
+            re.search(
+                r"[^\]]{0,100}" + re.escape(wikilink.string) + r"[^\[]{0,100}", wikitext
+            )
             .group()
-            .replace(link.string, link.text if link.text else link.target)
+            .replace(
+                wikilink.string, wikilink.text
+            )
         )
     except:
-        text = link.text if link.text else link.target
-    return text
+        small_context = wikilink.text
+    small_context = small_context.strip("\n")
+
+    text: str = plaintext[link.parent][link.lang]
+    text_index = text.find(small_context)
+    if text_index == -1:
+        text_index = text.find(wikilink.text)
+    context = text[max(0, text_index - 600): min(len(text) - 1, text_index + 600)]
+    text_index = context.find(wikilink.text)
+    if text_index == -1:
+        return ""
+    context = text[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
+    sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
+    context = " ".join([sent for sent in sentences if not sent.startswith("==") and not sent.endswith("==")])
+
+    return context
 
 
 def article_meta(args):
@@ -153,7 +205,13 @@ def article_meta(args):
     t = pd.Series(args[1])
     meta = {}
     eps = episodes.loc[episodes["nr"].isin(t.episode.split(","))]
-    meta["episodes"] = (t.title, [{"nr": ep.nr, "title": ep.title, "link": ast.literal_eval(ep.links)[0]} for i, ep in eps.iterrows()])
+    meta["episodes"] = (
+        t.title,
+        [
+            {"nr": ep.nr, "title": ep.title, "link": ast.literal_eval(ep.links)[0]}
+            for i, ep in eps.iterrows()
+        ],
+    )
     meta["summary"] = (t.title, t.description)
     meta["thumbnail"] = (t.title, t.thumbnail)
     meta["text"] = (
@@ -177,22 +235,27 @@ def article_meta(args):
     )
     return meta
 
+
 def link_meta(args):
-    global all_links, articles
+    global all_links, articles, plaintext
     a = pd.Series(dict(zip(("url", "parent"), args)))
     link = all_links.loc[
-        np.logical_and(
-            all_links["parent"] == a.parent, all_links["url"] == a.url
-        )
+        np.logical_and(all_links["parent"] == a.parent, all_links["url"] == a.url)
     ].iloc[0]
-    r = (f"{a.parent} -> {a.url}", {
-        "text": link.text,
-        "context": link_context(
-            articles.loc[articles["title"] == a.parent].iloc[0][f"content{['', '_en'][link.lang == 'en']}"],
-            link.wikitext,
-        ),
-        "lang": link.lang,
-    })
+    r = (
+        f"{a.parent} -> {a.url}",
+        {
+            "text": link.text,
+            "context": link_context(
+                articles.loc[articles["title"] == a.parent].iloc[0][
+                    f"content{['', '_en'][link.lang == 'en']}"
+                ],
+                link,
+            ),
+            "lang": link.lang,
+        },
+    )
+
     return r
 
 
@@ -201,8 +264,10 @@ def get_metadata() -> dict:
     meta = {"translations": translations}
     _meta = []
     with Pool() as pool:
-        with alive_bar(len(articles.index)) as bar:
-            for _ in pool.imap_unordered(article_meta, articles.to_dict("index").items()):
+        with alive_bar(len(articles.index), title="preparing article metadata") as bar:
+            for _ in pool.imap_unordered(
+                article_meta, articles.to_dict("index").items()
+            ):
                 _meta.append(_)
                 bar()
         pool.close()
@@ -213,19 +278,19 @@ def get_metadata() -> dict:
     _links = list(set([tuple(row) for row in links.values.tolist()]))
     _meta = []
     with Pool() as pool:
-        with alive_bar(len(_links)) as bar:
+        with alive_bar(len(_links), title="preparing link metadata") as bar:
             for _ in pool.imap_unordered(link_meta, _links):
                 _meta.append(_)
                 bar()
         meta.update({"links": dict(_meta)})
         pool.close()
     del _links, _meta
-    
+
     return meta
 
 
 def refresh_data():
-    global edges,nodes,categories,links,all_links,titles,articles,translations,episodes,edges,nodes,meta
+    global edges, nodes, categories, links, all_links, titles, articles, translations, episodes, edges, nodes, meta
     get_dataframes()
     edges = get_edges()
     nodes = get_nodes()
@@ -236,9 +301,20 @@ def refresh_data():
             "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
         )
         f.close()
-    
+
     # clean up memory
-    del edges,nodes,categories,links,all_links,titles,articles,translations,episodes,meta
+    del (
+        edges,
+        nodes,
+        categories,
+        links,
+        all_links,
+        titles,
+        articles,
+        translations,
+        episodes,
+        meta,
+    )
 
 
 class wait_for_stabilized(object):
