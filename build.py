@@ -61,14 +61,14 @@ def get_plaintext(args):
     return (t.title, {
         "de": wtp.parse(
             re.sub(
-                "<ref>[^<]+</ref>",
+                '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
                 " ",
                 t.content.replace("<br />", "").replace("<br>", ""),
             )
         ).plain_text(),
         "en": wtp.parse(
             re.sub(
-                "<ref>[^<]+</ref>",
+                '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
                 " ",
                 t.content_en.replace("<br />", "").replace("<br>", ""),
             )
@@ -174,11 +174,11 @@ def link_context(text, link: pd.Series):
     try:
         small_context = (
             re.search(
-                r"[^\]]{0,100}" + re.escape(wikilink.string) + r"[^\[]{0,100}", wikitext
+                r"[^\]}]{0,100}" + re.escape(link.string) + r"[^\[{]{0,100}", wikitext
             )
             .group()
             .replace(
-                wikilink.string, wikilink.text
+                link.string, wikilink.text
             )
         )
     except:
@@ -195,7 +195,7 @@ def link_context(text, link: pd.Series):
         return ""
     context = text[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
     sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
-    context = " ".join([sent for sent in sentences if not sent.startswith("==") and not sent.endswith("==")])
+    context = " ".join([sent for sent in sentences[1:-1] if not sent.startswith("==") and not sent.endswith("==")])
 
     return context
 
@@ -210,7 +210,7 @@ def article_meta(args):
         [
             {"nr": ep.nr, "title": ep.title, "link": ast.literal_eval(ep.links)[0]}
             for i, ep in eps.iterrows()
-        ],
+        ]
     )
     meta["summary"] = (t.title, t.description)
     meta["thumbnail"] = (t.title, t.thumbnail)
