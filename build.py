@@ -199,26 +199,33 @@ def link_meta(args):
 def get_metadata() -> dict:
     global articles, links
     meta = {"translations": translations}
-    print("Preparing article metadata...", end="\t")
+    _meta = []
     with Pool() as pool:
-        _meta = pool.map(article_meta, articles.to_dict("index").items())
+        with alive_bar(len(articles.index)) as bar:
+            for _ in pool.imap_unordered(article_meta, articles.to_dict("index").items()):
+                _meta.append(_)
+                bar()
         pool.close()
     meta.update({k: dict([d[k] for d in _meta if k in d]) for k in set().union(*_meta)})
     del _meta
-    print("Done")
 
     # link context
-    print("Preparing link metadata...", end="\t")
+    _links = list(set([tuple(row) for row in links.values.tolist()]))
+    _meta = []
     with Pool() as pool:
-        meta.update({"links": dict(pool.map(link_meta, list(set([tuple(row) for row in links.values.tolist()]))))})
+        with alive_bar(len(_links)) as bar:
+            for _ in pool.imap_unordered(link_meta, _links):
+                _meta.append(_)
+                bar()
+        meta.update({"links": dict(_meta)})
         pool.close()
-    print("Done")
+    del _links, _meta
     
     return meta
 
 
 def refresh_data():
-    global edges, nodes, meta
+    global edges,nodes,categories,links,all_links,titles,articles,translations,episodes,edges,nodes,meta
     get_dataframes()
     edges = get_edges()
     nodes = get_nodes()
@@ -229,6 +236,9 @@ def refresh_data():
             "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
         )
         f.close()
+    
+    # clean up memory
+    del edges,nodes,categories,links,all_links,titles,articles,translations,episodes,meta
 
 
 class wait_for_stabilized(object):
@@ -245,7 +255,12 @@ def create_save():
     driver = webdriver.Chrome(options=options)
     driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/visualize/_preload.html")
     try:
-        print("Pre-loading network...", end="\t")
+        progress = [0]
+        iterations = 3000
+        with alive_bar(iterations, title="pre-loading network") as bar:
+            while progress[-1] < iterations:
+                progress.append(driver.execute_script("return progress;"))
+                bar(progress[-1] - progress[-2])
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
         save = json.dumps(
             driver.execute_script("return exportNetwork();"),
@@ -256,7 +271,6 @@ def create_save():
             f.write(f"const SAVE = {save};")
     finally:
         driver.quit()
-    print("Done")
 
 
 if __name__ == "__main__":
@@ -265,7 +279,7 @@ if __name__ == "__main__":
         refresh_data()
         create_save()
     else:
-        options = ["--data", "--save"]
+        options = ["--data", "--preload"]
         for option in options:
             if option in args:
-                {"--data": refresh_data, "--save": create_save}[option]()
+                {"--data": refresh_data, "--preload": create_save}[option]()

@@ -17,6 +17,7 @@
         var network;
         var currentNode = "";
         var stabilized = false;
+        var progress = 0;
         var nodesDataset = new vis.DataSet(DATA["nodes"]);
         var edgesDataset = new vis.DataSet(DATA["edges"]);
 
@@ -40,7 +41,9 @@
             return { "nodes": _nodes, "edges": _edges }
         }
 
-        network.on("stabilizationProgress", function (params) { });
+        network.on("stabilizationProgress", function (params) { 
+            progress = Math.round(params.iterations)
+        });
         network.on("stabilizationIterationsDone", function () {
             stabilized = true
         });
