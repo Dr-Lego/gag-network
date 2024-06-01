@@ -34,6 +34,8 @@ const dom = {
   "info": document.getElementById("info")
 }
 
+// .visualize/js/events.js
+
 
 function draw() {
 

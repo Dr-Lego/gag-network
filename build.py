@@ -194,6 +194,7 @@ def link_context(text, link: pd.Series):
     if text_index == -1:
         return ""
     context = text[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
+    return context
     sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
     context = " ".join([sent for sent in sentences[1:-1] if not sent.startswith("==") and not sent.endswith("==")])
 
