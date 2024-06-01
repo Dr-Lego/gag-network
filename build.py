@@ -288,7 +288,7 @@ def refresh_data():
 
     with open("visualize/data/data.js", "w", encoding="utf-8") as f:
         f.write(
-            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":"), ensure_ascii=False)
+            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":"))
         )
         f.close()
 

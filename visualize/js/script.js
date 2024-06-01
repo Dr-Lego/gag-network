@@ -5,8 +5,8 @@ var highlightActive = false
 
 const nodeColor = "RGB(230, 145, 0)"
 const secondNodeColor = "RGB(211, 126, 35)"
-// var nodesDataset = new vis.DataSet(data.nodes.filter(node => !exclude.includes(node.id)));
-// var edgesDataset = new vis.DataSet(data.edges);
+var [nodesDataset, edgesDataset] = Object.values(importNetwork(SAVE))
+const edges = Object.values(edgesDataset._data)
 
 const dom = {
   "intro": document.getElementById("intro"),
@@ -39,11 +39,10 @@ function draw() {
   // create a network
   var container = document.getElementById("network");
 
-  var _data = importNetwork(SAVE)
-  // {
-  //   nodes: nodesDataset,
-  //   edges: edgesDataset,
-  // };
+  var _data = {
+    nodes: nodesDataset,
+    edges: edgesDataset,
+  };
 
   network = new vis.Network(container, _data, options);
   if (searchParams.has("new") || searchParams.has("exclude")) {
@@ -99,7 +98,7 @@ function showNodeInfo(node) {
   dom.info.style.opacity = 0
 
   // connections to
-  let connections_to = data.edges.filter(
+  let connections_to = edges.filter(
     edge => edge.from === node.id || (edge.to === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.to === node.id) { return edge.from } else { return edge.to } }
@@ -115,7 +114,7 @@ function showNodeInfo(node) {
   if (connections_to.length == 0) { dom.connections_to_section.style.display = "none" }
 
   // connections from
-  let connections_from = data.edges.filter(
+  let connections_from = edges.filter(
     edge => edge.to === node.id || (edge.from === node.id && edge.arrows == "to, from")
   ).map(
     function (edge) { if (edge.from === node.id) { return edge.to } else { return edge.from } }
@@ -209,7 +208,7 @@ function importNetwork(save) {
       _node["shape"] = "circularImage"
     }
     nodes.push(_node)
-    ids[i] = node[0]
+    ids[i+1] = node[0]
   }
 
   for (let i = 0; i < save.edges.length; i++) {
@@ -223,8 +222,8 @@ function importNetwork(save) {
   }
 
   return {
-    nodes: getNodeData(save.nodes),
-    edgesDataset: new vis.DataSet(save.edges),
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges),
   }
 }
 
@@ -275,7 +274,7 @@ function nodeDistance(a, b) {
 }
 
 function focus_edge(a, b) {
-  edge = data.edges.filter(
+  edge = edges.filter(
     edge => [a, b].sort().toString() == [edge.to, edge.from].sort().toString()
   )[0].id;
   network.selectEdges([edge])
