@@ -2,14 +2,11 @@ var allNodes;
 var network;
 var currentNode = "";
 var highlightActive = false
-var data = SAVE;
-if (searchParams.has("new")) {
-  data = DATA;
-};
+
 const nodeColor = "RGB(230, 145, 0)"
 const secondNodeColor = "RGB(211, 126, 35)"
-var nodesDataset = new vis.DataSet(data.nodes.filter(node => !exclude.includes(node.id)));
-var edgesDataset = new vis.DataSet(data.edges);
+// var nodesDataset = new vis.DataSet(data.nodes.filter(node => !exclude.includes(node.id)));
+// var edgesDataset = new vis.DataSet(data.edges);
 
 const dom = {
   "intro": document.getElementById("intro"),
@@ -42,10 +39,11 @@ function draw() {
   // create a network
   var container = document.getElementById("network");
 
-  var _data = {
-    nodes: nodesDataset,
-    edges: edgesDataset,
-  };
+  var _data = importNetwork(SAVE)
+  // {
+  //   nodes: nodesDataset,
+  //   edges: edgesDataset,
+  // };
 
   network = new vis.Network(container, _data, options);
   if (searchParams.has("new") || searchParams.has("exclude")) {
@@ -57,7 +55,7 @@ function draw() {
 
   allNodes = nodesDataset.get({ returnType: "Object" });
 
-  stats.innerHTML = `<b>Themen:</b><nobr>   ${Object.keys(nodesDataset._data).length}<br><b>Verbindungen:</b>  ${DATA.edges.length}`
+  stats.innerHTML = `<b>Themen:</b><nobr>   ${SAVE.nodes.length}<br><b>Verbindungen:</b>  ${SAVE.edges.length}`
 
   createEvents()
 
@@ -195,6 +193,35 @@ function exportNetwork() {
 }
 
 function importNetwork(save) {
+  let nodes = []
+  let edges = []
+  let ids = {}
+  const arrows = {
+    0: "to",
+    1: "to, from"
+  }
+
+  for (let i = 0; i < save.nodes.length; i++) {
+    const node = save.nodes[i];
+    let _node = {"id": node[0], "label": node[0], "size": node[1], "x": node[2], "y": node[3]}
+    if(node.length == 5){
+      _node["image"] = save.icons[node[4]]
+      _node["shape"] = "circularImage"
+    }
+    nodes.push(_node)
+    ids[i] = node[0]
+  }
+
+  for (let i = 0; i < save.edges.length; i++) {
+    const edge = save.edges[i];
+    if(edge.length == 2){
+      edge.push(0)
+    }
+    edges.push(
+      {"arrows": arrows[edge[2]], "from": ids[edge[0]], "to": ids[edge[1]], "id": `${ids[edge[0]]}-${ids[edge[1]]}`}
+    )
+  }
+
   return {
     nodes: getNodeData(save.nodes),
     edgesDataset: new vis.DataSet(save.edges),

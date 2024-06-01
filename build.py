@@ -192,14 +192,14 @@ def link_context(text, link: pd.Series):
     context = text[max(0, text_index - 600): min(len(text) - 1, text_index + 600)]
     text_index = context.find(wikilink.text)
     if text_index == -1:
-        return "<br><span class='not-available'>Vorschau nicht verfügbar ⛔</span><br>"
+        return "<br><span class='not-available'>Vorschau nicht verfügbar</span><br>"
     context = context[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
     
     sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
     if len(sentences) > 2:
         sentences = [["", sentences[0]][wikilink.text in sentences[0]]] + sentences[1:-1] + [["", sentences[-1]][wikilink.text in sentences[-1]]]
     elif len(sentences) == 0:
-        return "<br><span class='not-available'>Vorschau nicht verfügbar ⛔</span><br>"
+        return "<br><span class='not-available'>Vorschau nicht verfügbar</span><br>"
 
     context = " ".join([sent for sent in sentences if not sent.startswith("==") and not sent.endswith("==")])
     if len(sentences) <=2 and len(sentences) > 0:
@@ -222,25 +222,6 @@ def article_meta(args):
     )
     meta["summary"] = (t.title, t.description)
     meta["thumbnail"] = (t.title, t.thumbnail)
-    meta["text"] = (
-        t.title,
-        {
-            "de": wtp.parse(
-                re.sub(
-                    "<ref>[^<]+</ref>",
-                    " ",
-                    t.content.replace("<br />", "").replace("<br>", ""),
-                )
-            ).plain_text(),
-            "en": wtp.parse(
-                re.sub(
-                    "<ref>[^<]+</ref>",
-                    " ",
-                    t.content_en.replace("<br />", "").replace("<br>", ""),
-                )
-            ).plain_text(),
-        },
-    )
     return meta
 
 
@@ -307,7 +288,7 @@ def refresh_data():
 
     with open("visualize/data/data.js", "w", encoding="utf-8") as f:
         f.write(
-            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta})
+            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":"), ensure_ascii=False)
         )
         f.close()
 
@@ -328,10 +309,8 @@ def refresh_data():
     
     
     
-def compress_save(data: str) -> dict:
-    save: dict[str, list[dict]] = json.loads(data)
+def compress_save(save: dict[str, list[dict]]) -> dict:
     icons = {
-        "": None,
         "assets/icons/person.png": 1,
         "assets/icons/bomb.png": 2,
         "assets/icons/state.png": 3,
@@ -339,12 +318,12 @@ def compress_save(data: str) -> dict:
     }
 
 
-    nodes = [list(filter(None, [node["id"], node["size"], node["x"], node["y"], icons[node.get("image", "")]])) for node in save["nodes"]]
+    nodes = [list(filter(None, [node["id"], node["size"], node["x"], node["y"], icons.get(node.get("image", ""), None)])) for node in save["nodes"]]
     ids = {node[0]: i+1 for i, node in enumerate(nodes)}
 
     edges = [list(filter(None, [ids[edge["from"]], ids[edge["to"]], 1 if edge["arrows"] == "to" else None])) for edge in save["edges"]]
     
-    return {"nodes": nodes, "edges": edges}
+    return {"nodes": nodes, "edges": edges, "icons": {v: k for k, v in icons.items()}}
 
 
 class wait_for_stabilized(object):
@@ -369,12 +348,13 @@ def create_save():
                 bar(progress[-1] - progress[-2])
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
         save = json.dumps(
-            driver.execute_script("return exportNetwork();"),
+            compress_save(driver.execute_script("return exportNetwork();")),
             separators=(",", ":"),
             ensure_ascii=False,
         )
         with open("visualize/data/save.js", "w", encoding="utf-8") as f:
             f.write(f"const SAVE = {save};")
+            f.close()
     finally:
         driver.quit()
 
