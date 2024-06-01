@@ -285,6 +285,14 @@ hr {
                                     supported by Chrome, Edge, Opera and Firefox */
 }
 
+.not-available{
+    color: grey;
+    text-align: center;
+    padding-bottom: 15px;
+    display: inline-block;
+    width: 100%;
+}
+
 h2,
 h3 {
     margin: 10px;

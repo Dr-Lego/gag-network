@@ -85,8 +85,8 @@ def get_dataframes():
         GROUP BY url having count(url) <= 5000)"""
 
     links = pd.read_sql(link_filter.format("url, parent, lang"), con=db.conn)
-    links = links.sort_values(links.columns.to_list()).drop_duplicates(
-        links.columns.drop("lang"), keep="first"
+    links = links.sort_values(["lang"], ascending=True).drop_duplicates( #links.columns.to_list()
+        ["url", "parent"], keep="first"
     )
     all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
     titles = pd.read_sql("SELECT DISTINCT title FROM articles", con=db.conn)
@@ -192,11 +192,18 @@ def link_context(text, link: pd.Series):
     context = text[max(0, text_index - 600): min(len(text) - 1, text_index + 600)]
     text_index = context.find(wikilink.text)
     if text_index == -1:
-        return ""
-    context = text[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
-    return context
+        return "<br><span class='not-available'>Vorschau nicht verfügbar ⛔</span><br>"
+    context = context[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
+    
     sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
-    context = " ".join([sent for sent in sentences[1:-1] if not sent.startswith("==") and not sent.endswith("==")])
+    if len(sentences) > 2:
+        sentences = [["", sentences[0]][wikilink.text in sentences[0]]] + sentences[1:-1] + [["", sentences[-1]][wikilink.text in sentences[-1]]]
+    elif len(sentences) == 0:
+        return "<br><span class='not-available'>Vorschau nicht verfügbar ⛔</span><br>"
+
+    context = " ".join([sent for sent in sentences if not sent.startswith("==") and not sent.endswith("==")])
+    if len(sentences) <=2 and len(sentences) > 0:
+        context = f"…{context}…"
 
     return context
 
@@ -242,7 +249,8 @@ def link_meta(args):
     a = pd.Series(dict(zip(("url", "parent"), args)))
     link = all_links.loc[
         np.logical_and(all_links["parent"] == a.parent, all_links["url"] == a.url)
-    ].iloc[0]
+    ].sort_values(["lang"], ascending=True).iloc[0]
+   
     r = (
         f"{a.parent} -> {a.url}",
         {
@@ -291,7 +299,7 @@ def get_metadata() -> dict:
 
 
 def refresh_data():
-    global edges, nodes, categories, links, all_links, titles, articles, translations, episodes, edges, nodes, meta
+    global edges, nodes, categories, links, all_links, titles, articles, translations, episodes, edges, nodes, meta, plaintext
     get_dataframes()
     edges = get_edges()
     nodes = get_nodes()
@@ -315,6 +323,7 @@ def refresh_data():
         translations,
         episodes,
         meta,
+        plaintext
     )
 
 
