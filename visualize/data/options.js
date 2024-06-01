@@ -13,6 +13,7 @@ const options = {
         shape: "dot",
         size: 10,
         color: "RGB(230, 145, 0)",
+        borderWidth: 0,
         font: {
             face: "Poppins",
             strokeWidth: 5

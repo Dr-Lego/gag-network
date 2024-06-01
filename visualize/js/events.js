@@ -47,6 +47,8 @@ function createEvents() {
 }
 
 var highlightActive = false;
+const nodeColor = "RGB(230, 145, 0)"
+const secondNodeColor = "RGB(211, 126, 35)"
 
 
 function neighbourhoodHighlight(params) {
@@ -60,10 +62,10 @@ function neighbourhoodHighlight(params) {
       // mark all nodes as hard to read.
       for (var nodeId in allNodes) {
         allNodes[nodeId].color = "rgb(230,230,230)";
-        if (allNodes[nodeId].hiddenLabel === undefined) {
-          allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-          allNodes[nodeId].label = "";
-        }
+        // if (allNodes[nodeId].hiddenLabel === undefined) {
+        //   allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        //   allNodes[nodeId].label = "";
+        // }
       }
       var connectedNodes = network.getConnectedNodes(selectedNode);
       var allConnectedNodes = [];
@@ -80,37 +82,37 @@ function neighbourhoodHighlight(params) {
       // all second degree nodes get a different color and their label back
       for (i = 0; i < allConnectedNodes.length; i++) {
         allNodes[allConnectedNodes[i]].color = secondNodeColor;
-        if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
-          allNodes[allConnectedNodes[i]].label =
-            allNodes[allConnectedNodes[i]].hiddenLabel;
-          allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
-        }
+        // if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        //   allNodes[allConnectedNodes[i]].label =
+        //     allNodes[allConnectedNodes[i]].hiddenLabel;
+        //   allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+        // }
       }
   
       // all first degree nodes get their own color and their label back
       for (i = 0; i < connectedNodes.length; i++) {
         allNodes[connectedNodes[i]].color = nodeColor;
-        if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
-          allNodes[connectedNodes[i]].label =
-            allNodes[connectedNodes[i]].hiddenLabel;
-          allNodes[connectedNodes[i]].hiddenLabel = undefined;
-        }
+        // if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        //   allNodes[connectedNodes[i]].label =
+        //     allNodes[connectedNodes[i]].hiddenLabel;
+        //   allNodes[connectedNodes[i]].hiddenLabel = undefined;
+        // }
       }
   
       // the main node gets its own color and its label back.
       allNodes[selectedNode].color = nodeColor;
-      if (allNodes[selectedNode].hiddenLabel !== undefined) {
-        allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-        allNodes[selectedNode].hiddenLabel = undefined;
-      }
+    //   if (allNodes[selectedNode].hiddenLabel !== undefined) {
+    //     allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+    //     allNodes[selectedNode].hiddenLabel = undefined;
+    //   }
     } else if (highlightActive === true) {
       // reset all nodes
       for (var nodeId in allNodes) {
         allNodes[nodeId].color = nodeColor;
-        if (allNodes[nodeId].hiddenLabel !== "") {
-          allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
-          allNodes[nodeId].hiddenLabel = undefined;
-        }
+        // if (allNodes[nodeId].hiddenLabel !== "") {
+        //   allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        //   allNodes[nodeId].hiddenLabel = undefined;
+        // }
       }
       highlightActive = false;
     }

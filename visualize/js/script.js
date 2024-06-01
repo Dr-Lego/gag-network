@@ -5,8 +5,6 @@ var highlightActive = false
 
 delete DATA.nodes; delete DATA.edges
 
-const nodeColor = "RGB(230, 145, 0)"
-const secondNodeColor = "RGB(211, 126, 35)"
 var [nodesDataset, edgesDataset] = Object.values(importNetwork(SAVE))
 const edges = Object.values(edgesDataset._data)
 
