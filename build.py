@@ -347,13 +347,12 @@ def create_save():
                 progress.append(driver.execute_script("return progress;"))
                 bar(progress[-1] - progress[-2])
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
-        save = json.dumps(
-            compress_save(driver.execute_script("return exportNetwork();")),
-            separators=(",", ":"),
-            ensure_ascii=False,
-        )
+        
         with open("visualize/data/save.js", "w", encoding="utf-8") as f:
-            f.write(f"const SAVE = {save};")
+            f.write("const SAVE = " + json.dumps(
+                compress_save(driver.execute_script("return exportNetwork();")),
+                separators=(",", ":")
+            ))
             f.close()
     finally:
         driver.quit()
