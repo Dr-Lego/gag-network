@@ -52,8 +52,6 @@ function draw() {
     document.getElementById('loading-container').style.display = "none"
   }
 
-  allNodes = nodesDataset.get({ returnType: "Object" });
-
   stats.innerHTML = `<b>Themen:</b><nobr>   ${SAVE.nodes.length}<br><b>Verbindungen:</b>  ${SAVE.edges.length}`
 
   createEvents()

@@ -16,7 +16,8 @@ const options = {
         borderWidth: 0,
         font: {
             face: "Poppins",
-            strokeWidth: 5
+            strokeWidth: 5,
+            color: "black"
         }
     },
     layout: {
@@ -26,7 +27,6 @@ const options = {
         arrows: { to: { scaleFactor: 0.8 }, from: { scaleFactor: 0.8 } },
         color: {
             color: "RGBA(211, 170, 126, 0.8)",//"RGBA(232, 139, 39, 0.5)",
-            hover: "RGBA(211, 170, 126, 1)",
             highlight: "RGBA(211, 170, 126, 1)",
             inherit: false,
         },
