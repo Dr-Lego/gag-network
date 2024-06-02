@@ -33,6 +33,61 @@ body {
     opacity: 1;
 }
 
+#exclude-container {
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    padding: 0;
+    background-color: white;
+    margin: 0px;
+    transition: opacity 0.5s ease 0s;
+    font-size: large !important;
+    color: grey !important;
+    text-align: center;
+}
+
+#exclude-container h2 {
+    padding-left: 20%;
+    padding-right: 20%;
+}
+
+.buttons {
+    width:95%;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.button {
+    cursor: pointer;
+    display: inline-block;
+    transition: width 0.2s ease-in-out;
+    width: 15%;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#no {
+    background-color: #d34823;
+    color: white;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#yes {
+    background: greenyellow;
+    color: black;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.button:hover {
+    width:20%;
+}
+
 #loading-container {
     position: absolute;
     z-index: 1000;

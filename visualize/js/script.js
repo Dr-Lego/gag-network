@@ -45,7 +45,7 @@ function draw() {
   };
 
   network = new vis.Network(container, _data, options);
-  if (searchParams.has("new") || searchParams.has("exclude")) {
+  if (false) {//searchParams.has("new") || searchParams.has("exclude")) {
     network.stabilize(2000)
   } else {
     document.body.removeAttribute("style")
@@ -292,4 +292,13 @@ function focus_edge(a, b) {
 
 
 
-draw()
+var connections_count = Object.assign({}, ...SAVE.nodes.map(
+  node => ({ [node[0]]: (node[1] - 10) * 2 })
+));
+
+var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 50).map(node => node)
+
+
+
+
+//draw()
