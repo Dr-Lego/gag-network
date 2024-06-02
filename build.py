@@ -57,23 +57,26 @@ def get_icon(title: str) -> str:
 
 
 def get_plaintext(args):
-    i,t = args
-    return (t.title, {
-        "de": wtp.parse(
-            re.sub(
-                '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
-                " ",
-                t.content.replace("<br />", "").replace("<br>", ""),
-            )
-        ).plain_text(),
-        "en": wtp.parse(
-            re.sub(
-                '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
-                " ",
-                t.content_en.replace("<br />", "").replace("<br>", ""),
-            )
-        ).plain_text(),
-    })
+    i, t = args
+    return (
+        t.title,
+        {
+            "de": wtp.parse(
+                re.sub(
+                    '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
+                    " ",
+                    t.content.replace("<br />", "").replace("<br>", ""),
+                )
+            ).plain_text(),
+            "en": wtp.parse(
+                re.sub(
+                    '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
+                    " ",
+                    t.content_en.replace("<br />", "").replace("<br>", ""),
+                )
+            ).plain_text(),
+        },
+    )
 
 
 def get_dataframes():
@@ -85,7 +88,9 @@ def get_dataframes():
         GROUP BY url having count(url) <= 5000)"""
 
     links = pd.read_sql(link_filter.format("url, parent, lang"), con=db.conn)
-    links = links.sort_values(["lang"], ascending=True).drop_duplicates( #links.columns.to_list()
+    links = links.sort_values(
+        ["lang"], ascending=True
+    ).drop_duplicates(  # links.columns.to_list()
         ["url", "parent"], keep="first"
     )
     all_links = pd.read_sql(link_filter.format("*"), con=db.conn)
@@ -177,9 +182,7 @@ def link_context(text, link: pd.Series):
                 r"[^\]}]{0,100}" + re.escape(link.string) + r"[^\[{]{0,100}", wikitext
             )
             .group()
-            .replace(
-                link.string, wikilink.text
-            )
+            .replace(link.string, wikilink.text)
         )
     except:
         small_context = wikilink.text
@@ -189,20 +192,30 @@ def link_context(text, link: pd.Series):
     text_index = text.find(small_context)
     if text_index == -1:
         text_index = text.find(wikilink.text)
-    context = text[max(0, text_index - 600): min(len(text) - 1, text_index + 600)]
+    context = text[max(0, text_index - 600) : min(len(text) - 1, text_index + 600)]
     text_index = context.find(wikilink.text)
     if text_index == -1:
         return "<br><span class='not-available'>Vorschau nicht verfügbar</span><br>"
-    context = context[max(0, text_index - 400): min(len(text) - 1, text_index + 400)]
-    
+    context = context[max(0, text_index - 400) : min(len(text) - 1, text_index + 400)]
+
     sentences = sentence_splitter.split_text_into_sentences(context, language=link.lang)
     if len(sentences) > 2:
-        sentences = [["", sentences[0]][wikilink.text in sentences[0]]] + sentences[1:-1] + [["", sentences[-1]][wikilink.text in sentences[-1]]]
+        sentences = (
+            [["", sentences[0]][wikilink.text in sentences[0]]]
+            + sentences[1:-1]
+            + [["", sentences[-1]][wikilink.text in sentences[-1]]]
+        )
     elif len(sentences) == 0:
         return "<br><span class='not-available'>Vorschau nicht verfügbar</span><br>"
 
-    context = " ".join([sent for sent in sentences if not sent.startswith("==") and not sent.endswith("==")])
-    if len(sentences) <=2 and len(sentences) > 0:
+    context = " ".join(
+        [
+            sent
+            for sent in sentences
+            if not sent.startswith("==") and not sent.endswith("==")
+        ]
+    )
+    if len(sentences) <= 2 and len(sentences) > 0:
         context = f"…{context}…"
 
     return context
@@ -218,7 +231,7 @@ def article_meta(args):
         [
             {"nr": ep.nr, "title": ep.title, "link": ast.literal_eval(ep.links)[0]}
             for i, ep in eps.iterrows()
-        ]
+        ],
     )
     meta["summary"] = (t.title, t.description)
     meta["thumbnail"] = (t.title, t.thumbnail)
@@ -228,10 +241,14 @@ def article_meta(args):
 def link_meta(args):
     global all_links, articles, plaintext
     a = pd.Series(dict(zip(("url", "parent"), args)))
-    link = all_links.loc[
-        np.logical_and(all_links["parent"] == a.parent, all_links["url"] == a.url)
-    ].sort_values(["lang"], ascending=True).iloc[0]
-   
+    link = (
+        all_links.loc[
+            np.logical_and(all_links["parent"] == a.parent, all_links["url"] == a.url)
+        ]
+        .sort_values(["lang"], ascending=True)
+        .iloc[0]
+    )
+
     r = (
         f"{a.parent} -> {a.url}",
         {
@@ -288,7 +305,10 @@ def refresh_data():
 
     with open("visualize/data/data.js", "w", encoding="utf-8") as f:
         f.write(
-            "const DATA = " + json.dumps({"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":"))
+            "const DATA = "
+            + json.dumps(
+                {"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":")
+            )
         )
         f.close()
 
@@ -304,11 +324,10 @@ def refresh_data():
         translations,
         episodes,
         meta,
-        plaintext
+        plaintext,
     )
-    
-    
-    
+
+
 def compress_save(save: dict[str, list[dict]]) -> dict:
     icons = {
         "assets/icons/person.png": 1,
@@ -317,12 +336,37 @@ def compress_save(save: dict[str, list[dict]]) -> dict:
         "assets/icons/city.png": 4,
     }
 
+    nodes = [
+        list(
+            filter(
+                None,
+                [
+                    node["id"],
+                    node["size"],
+                    node["x"],
+                    node["y"],
+                    icons.get(node.get("image", ""), None),
+                ],
+            )
+        )
+        for node in save["nodes"]
+    ]
+    ids = {node[0]: i + 1 for i, node in enumerate(nodes)}
 
-    nodes = [list(filter(None, [node["id"], node["size"], node["x"], node["y"], icons.get(node.get("image", ""), None)])) for node in save["nodes"]]
-    ids = {node[0]: i+1 for i, node in enumerate(nodes)}
+    edges = [
+        list(
+            filter(
+                None,
+                [
+                    ids[edge["from"]],
+                    ids[edge["to"]],
+                    1 if edge["arrows"] == "to" else None,
+                ],
+            )
+        )
+        for edge in save["edges"]
+    ]
 
-    edges = [list(filter(None, [ids[edge["from"]], ids[edge["to"]], 1 if edge["arrows"] == "to" else None])) for edge in save["edges"]]
-    
     return {"nodes": nodes, "edges": edges, "icons": {v: k for k, v in icons.items()}}
 
 
@@ -335,11 +379,14 @@ class wait_for_stabilized(object):
 
 
 def create_save():
+    save = {}
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
-    driver.get("file:///home/raphael/PROGRAMMING/Projekte/GAG/visualize/_preload.html")
-    try:
+    for size, name in {1000: "full", 80: "small"}.items():
+        driver.get(
+            f"file:///home/raphael/PROGRAMMING/Projekte/GAG/visualize/_preload.html?exclude={size}"
+        )
         progress = [0]
         iterations = 3000
         with alive_bar(iterations, title="pre-loading network") as bar:
@@ -347,15 +394,13 @@ def create_save():
                 progress.append(driver.execute_script("return progress;"))
                 bar(progress[-1] - progress[-2])
         stabilized = WebDriverWait(driver, 300).until(wait_for_stabilized())
-        
-        with open("visualize/data/save.js", "w", encoding="utf-8") as f:
-            f.write("const SAVE = " + json.dumps(
-                compress_save(driver.execute_script("return exportNetwork();")),
-                separators=(",", ":")
-            ))
-            f.close()
-    finally:
-        driver.quit()
+        save[name] = compress_save(driver.execute_script("return exportNetwork();"))
+
+    driver.quit()
+
+    with open("visualize/data/save.js", "w", encoding="utf-8") as f:
+        f.write("const SAVE = " + json.dumps(save, separators=(",", ":")))
+        f.close()
 
 
 if __name__ == "__main__":

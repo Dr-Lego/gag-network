@@ -14,6 +14,17 @@
 
     <script>
         delete DATA.meta
+        const searchParams = new URLSearchParams(window.location.search)
+        if (searchParams.has("exclude")) {
+            var connections_count = Object.assign({}, ...DATA.nodes.map(
+                node => ({ [node.id]: (node.size - 10) * 2 })
+            ));
+            var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 80).map(node => node)
+    
+            DATA.nodes = DATA.nodes.filter(node => !fiftyplus.includes(node.id))
+            DATA.edges = DATA.edges.filter(edge => !fiftyplus.includes(edge.to) && !fiftyplus.includes(edge.from))
+        }
+
         var allNodes;
         var network;
         var currentNode = "";
@@ -36,13 +47,15 @@
             let positions = network.getPositions()
             var _nodes = []
             for (const key in nodesDataset._data) {
-                _nodes.push({...nodesDataset._data[key], ...positions[key]});
+                if(network.getConnectedNodes(nodesDataset._data[key].id).length > 0){
+                    _nodes.push({ ...nodesDataset._data[key], ...positions[key] });
+                }
             }
             var _edges = Object.values(edgesDataset._data)
             return { "nodes": _nodes, "edges": _edges }
         }
 
-        network.on("stabilizationProgress", function (params) { 
+        network.on("stabilizationProgress", function (params) {
             progress = Math.round(params.iterations)
         });
         network.on("stabilizationIterationsDone", function () {

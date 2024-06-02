@@ -151,10 +151,10 @@ function showNodeInfo(node) {
 
 function showEdgeInfo(a, b) {
   dom.intro.style.display = "none"
-  let link_text = DATA.meta.links[`${a} -> ${b}`].text;
+  let link = DATA.meta.links[`${a} -> ${b}`];
 
-  context = DATA.meta.links[`${a} -> ${b}`].context;
-  context = context.replaceAll(link_text, `<span class="highlighted">${link_text}</span>`)
+  context = link.context;
+  context = context.replaceAll(link.text, `<span class="highlighted">${link_text}</span>`)
   dom.context.innerHTML = context
   dom.context_title.innerHTML = `<span class='theme-link'>${a}</span> > <span class='theme-link'>${b}</span>`
   dom.info.style.opacity = 1
@@ -282,7 +282,7 @@ function focus_edge(a, b) {
 }
 
 
-var connections_count = Object.assign({}, ...SAVE.nodes.map(
+var connections_count = Object.assign({}, ...SAVE.full.nodes.map(
   node => ({ [node[0]]: (node[1] - 10) * 2 })
 ));
 var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 80).map(node => node)
@@ -290,8 +290,7 @@ dom.to_exclude.innerHTML = fiftyplus.join(", ")
 
 
 $(".button").click(function (event) {
-  console.log(event.target.id);
-  data = SAVE;
+  data = SAVE[{"yes": "small", "no": "full"}[event.target.id]];
   delete SAVE;
   draw();
   dom.exclude_container.style.opacity = 0;
