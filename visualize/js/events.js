@@ -12,12 +12,12 @@ function createEvents() {
 
 
     network.on("stabilizationProgress", function (params) {
-        document.getElementById('loading').innerText = `${Math.round((params.iterations / params.total) * 100).toString()}%`
+        //document.getElementById('loading').innerText = `${Math.round((params.iterations / params.total) * 100).toString()}%`
     });
 
     network.on("stabilizationIterationsDone", function () {
-        document.body.removeAttribute("style")
-        document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
+       document.body.removeAttribute("style")
+       // document.getElementById('loading-container').classList.toggle("fade-out", true) //style.display = "none"
     });
 
     network.on('click', function (params) {

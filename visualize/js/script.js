@@ -1,12 +1,13 @@
 var allNodes;
 var network;
 var currentNode = "";
-var highlightActive = false
+var highlightActive = false;
+var edges;
+var data;
+var nodesDataset
+var edgesDataset;
 
 delete DATA.nodes; delete DATA.edges
-
-var [nodesDataset, edgesDataset] = Object.values(importNetwork(SAVE))
-const edges = Object.values(edgesDataset._data)
 
 const dom = {
   "intro": document.getElementById("intro"),
@@ -28,13 +29,17 @@ const dom = {
   "search_suggestions": document.getElementById("search-suggestions"),
   "context": document.getElementById("context"),
   "context_title": document.getElementById("context-title"),
-  "info": document.getElementById("info")
+  "info": document.getElementById("info"),
+  "to_exclude": document.getElementById("to-exclude"),
+  "exclude_container": document.getElementById("exclude-container")
 }
 
 // .visualize/js/events.js
 
 
 function draw() {
+  [nodesDataset, edgesDataset] = Object.values(importNetwork(data))
+  edges = Object.values(edgesDataset._data)
 
   // create a network
   var container = document.getElementById("network");
@@ -49,10 +54,10 @@ function draw() {
     network.stabilize(2000)
   } else {
     document.body.removeAttribute("style")
-    document.getElementById('loading-container').style.display = "none"
+    //document.getElementById('loading-container').style.display = "none"
   }
 
-  stats.innerHTML = `<b>Themen:</b><nobr>   ${SAVE.nodes.length}<br><b>Verbindungen:</b>  ${SAVE.edges.length}`
+  stats.innerHTML = `<b>Themen:</b><nobr>   ${data.nodes.length}<br><b>Verbindungen:</b>  ${data.edges.length}`
 
   createEvents()
 
@@ -169,7 +174,8 @@ function search(elem) {
     // remove focus
     document.activeElement.blur()
     showNodeInfo(nodesDataset.get(elem.value));
-    network.selectNodes([elem.value])
+    network.selectNodes([elem.value]);
+    neighbourhoodHighlight({'nodes':[elem.value]});
     focus_node(elem.value);
   }
 }
@@ -200,22 +206,22 @@ function importNetwork(save) {
 
   for (let i = 0; i < save.nodes.length; i++) {
     const node = save.nodes[i];
-    let _node = {"id": node[0], "label": node[0], "size": node[1], "x": node[2], "y": node[3]}
-    if(node.length == 5){
+    let _node = { "id": node[0], "label": node[0], "size": node[1], "x": node[2], "y": node[3] }
+    if (node.length == 5) {
       _node["image"] = save.icons[node[4]]
       _node["shape"] = "circularImage"
     }
     nodes.push(_node)
-    ids[i+1] = node[0]
+    ids[i + 1] = node[0]
   }
 
   for (let i = 0; i < save.edges.length; i++) {
     const edge = save.edges[i];
-    if(edge.length == 2){
+    if (edge.length == 2) {
       edge.push(0)
     }
     edges.push(
-      {"arrows": arrows[edge[2]], "from": ids[edge[0]], "to": ids[edge[1]], "id": `${ids[edge[0]]}-${ids[edge[1]]}`}
+      { "arrows": arrows[edge[2]], "from": ids[edge[0]], "to": ids[edge[1]], "id": `${ids[edge[0]]}-${ids[edge[1]]}` }
     )
   }
 
@@ -229,21 +235,6 @@ function objectToArray(obj) {
   return Object.keys(obj).map(function (key) { obj[key].id = key; return obj[key] });
 }
 
-
-function getNodeData(data) {
-  var networkNodes = [];
-
-  data.forEach(function (elem, index) {
-    networkNodes.push({
-      id: elem.id,
-      label: elem.id,
-      x: elem.x,
-      y: elem.y,
-    });
-  });
-
-  return new vis.DataSet(networkNodes);
-}
 
 function focus_node(node) {
   network.moveTo({
@@ -291,14 +282,19 @@ function focus_edge(a, b) {
 }
 
 
-
 var connections_count = Object.assign({}, ...SAVE.nodes.map(
   node => ({ [node[0]]: (node[1] - 10) * 2 })
 ));
-
-var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 50).map(node => node)
-
-
+var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 80).map(node => node)
+dom.to_exclude.innerHTML = fiftyplus.join(", ")
 
 
-//draw()
+$(".button").click(function (event) {
+  console.log(event.target.id);
+  data = SAVE;
+  delete SAVE;
+  draw();
+  dom.exclude_container.style.opacity = 0;
+  dom.exclude_container.style.pointerEvents = "none";
+  setTimeout(function(){dom.exclude_container.remove()}, 1000)
+})

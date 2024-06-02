@@ -19,15 +19,21 @@
 
 <body style="cursor: wait">
   <div id="exclude-container">
-    <div style="height: 25%"></div>
-    <h3>Möchtest du folgende Themen mit jeweils mehr als 50 Verbindungen ausblenden?</h3>
-      <p>Das könnte die Darstellung erheblich beschleunigen - besonders auf älteren Computern.</p>
-      <div class="buttons"><div id="no" class="button">nein</div><div id="yes" class="button">ok</div></div>
+    <section id="exclude-box">
+      <h3>Möchtest du folgende Themen mit jeweils mehr als 80 Verbindungen ausblenden?</h3>
+      <p>Dies könnte die Darstellung erheblich beschleunigen und wird besonders für ältere Computer empfohlen.</p>
+      <p id="to-exclude"></p>
+      <div class="buttons">
+        <div id="no" class="button">nein</div>
+        <div id="yes" class="button">ja</div>
+      </div>
+    </section>
+
   </div>
-  <div id="loading-container">
+  <!-- <div id="loading-container">
     <p id="loading" class="noselect">0%</p>
     <p id="comment" class="noselect">Lernen’s a bissl Geduld...</p>
-  </div>
+  </div> -->
 
   <div id="network"></div>
   <!-- <a href="https://www.geschichte.fm/"><img id="logo" src="assets/podcast-cover.jpg"></a> -->
@@ -42,11 +48,16 @@
         <img id="thumbnail" src="assets/gag-logo.webp">
       </div>
       <div id="intro">
-        <h2 style="font-size: x-large;"><a href="https://www.geschichte.fm" target="_blank">Geschichten aus der Geschichte</a></h2>
+        <h2 style="font-size: x-large;"><a href="https://www.geschichte.fm" target="_blank">Geschichten aus der
+            Geschichte</a></h2>
         <h1 style="font-size: xx-large; margin-left: 7px; margin-top: 5px;">»Flickenteppich«</h1>
-        <p style="margin: 10px; font-size: medium;">Diese Seite versucht den »Flickenteppich« des Podcasts <a href="https://www.geschichte.fm" target="_blank">»Geschichten aus der Geschichte«</a> zu visualisieren.<br>
-          Die Netzwerkvisualisierung basiert auf der <a href="https://de.wikipedia.org/wiki/Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste" target="_blank">Wikipedia-Episodenliste</a> des Podcasts und zeigt, welche
-          Wikipedia-Artikel zu den erwähnten Themen sich gegenseitig verlinken. Dabei zeigen sich einige interessante Verbindungen...
+        <p style="margin: 10px; font-size: medium;">Diese Seite versucht den »Flickenteppich« des Podcasts <a
+            href="https://www.geschichte.fm" target="_blank">»Geschichten aus der Geschichte«</a> zu visualisieren.<br>
+          Die Netzwerkvisualisierung basiert auf der <a
+            href="https://de.wikipedia.org/wiki/Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste"
+            target="_blank">Wikipedia-Episodenliste</a> des Podcasts und zeigt, welche
+          Wikipedia-Artikel zu den erwähnten Themen sich gegenseitig verlinken. Dabei zeigen sich einige interessante
+          Verbindungen...
         </p>
         <p id="stats"></p>
       </div>
