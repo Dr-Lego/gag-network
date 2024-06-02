@@ -3,6 +3,8 @@ import pandas as pd
 from selenium import webdriver
 import sys
 import math
+import podcastparser
+import urllib.request
 import sentence_splitter
 import numpy as np
 from multiprocessing import Pool
@@ -34,6 +36,7 @@ episodes: pd.DataFrame
 edges: list
 nodes: list
 meta: dict
+episode_covers: dict
 
 
 def get_icon(title: str) -> str:
@@ -80,7 +83,7 @@ def get_plaintext(args):
 
 
 def get_dataframes():
-    global links, all_links, titles, articles, episodes, categories, translations, plaintext
+    global links, all_links, titles, articles, episodes, categories, translations, plaintext, episode_covers
     db = Database()
     link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
         SELECT DISTINCT url FROM links
@@ -107,6 +110,8 @@ def get_dataframes():
         pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).values
     )
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
+    feed = podcastparser.parse('https://geschichten-aus-der-geschichte.podigee.io/feed/mp3', urllib.request.urlopen('https://geschichten-aus-der-geschichte.podigee.io/feed/mp3'))
+    episode_covers = {ep["link"].removesuffix("/").split("/")[-1]: ep.get("episode_art_url", feed["cover_url"]).split("=/")[-1] for ep in feed["episodes"]}
     categories_df = pd.read_sql(
         "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
         con=db.conn,
@@ -267,8 +272,8 @@ def link_meta(args):
 
 
 def get_metadata() -> dict:
-    global articles, links
-    meta = {"translations": translations}
+    global articles, links, episode_covers
+    meta = {"translations": translations, "episode_covers": episode_covers}
     _meta = []
     with Pool() as pool:
         with alive_bar(len(articles.index), title="preparing article metadata") as bar:
