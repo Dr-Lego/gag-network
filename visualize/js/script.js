@@ -154,7 +154,7 @@ function showEdgeInfo(a, b) {
   let link = DATA.meta.links[`${a} -> ${b}`];
 
   context = link.context;
-  context = context.replaceAll(link.text, `<span class="highlighted">${link_text}</span>`)
+  context = context.replaceAll(link.text, `<span class="highlighted">${link.text}</span>`)
   dom.context.innerHTML = context
   dom.context_title.innerHTML = `<span class='theme-link'>${a}</span> > <span class='theme-link'>${b}</span>`
   dom.info.style.opacity = 1

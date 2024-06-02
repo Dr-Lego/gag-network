@@ -19,7 +19,7 @@
             var connections_count = Object.assign({}, ...DATA.nodes.map(
                 node => ({ [node.id]: (node.size - 10) * 2 })
             ));
-            var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > 80).map(node => node)
+            var fiftyplus = Object.keys(connections_count).filter(node => connections_count[node] > searchParams.get("exclude")).map(node => node)
     
             DATA.nodes = DATA.nodes.filter(node => !fiftyplus.includes(node.id))
             DATA.edges = DATA.edges.filter(edge => !fiftyplus.includes(edge.to) && !fiftyplus.includes(edge.from))
