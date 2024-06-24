@@ -7,8 +7,6 @@ var data;
 var nodesDataset
 var edgesDataset;
 
-delete DATA.nodes; delete DATA.edges
-
 const dom = {
   "intro": document.getElementById("intro"),
   "stats": document.getElementById("stats"),
@@ -50,12 +48,7 @@ function draw() {
   };
 
   network = new vis.Network(container, _data, options);
-  if (false) {//searchParams.has("new") || searchParams.has("exclude")) {
-    network.stabilize(2000)
-  } else {
-    document.body.removeAttribute("style")
-    //document.getElementById('loading-container').style.display = "none"
-  }
+  document.body.removeAttribute("style")
 
   stats.innerHTML = `<b>Themen:</b><nobr>   ${data.nodes.length}<br><b>Verbindungen:</b>  ${data.edges.length}`
 
@@ -74,11 +67,11 @@ function showNodeInfo(node) {
   dom.intro.style.display = "none"
   currentNode = node.id;
   dom.title.innerHTML = `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(node.id.replaceAll(" ", "_"))}" target="_blank">${node.id}</a>`
-  dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(DATA.meta.translations[node.id].replaceAll(" ", "_"))}" target="_blank">${DATA.meta.translations[node.id]}</a>`
-  dom.description.innerHTML = DATA.meta.summary[node.id]
-  dom.thumbnail.src = DATA.meta.thumbnail[node.id];
+  dom.title_en.innerHTML = `<a href="https://en.wikipedia.org/wiki/${encodeURIComponent(META.translations[node.id].replaceAll(" ", "_"))}" target="_blank">${META.translations[node.id]}</a>`
+  dom.description.innerHTML = META.summary[node.id]
+  dom.thumbnail.src = META.thumbnail[node.id];
 
-  if (DATA.meta.thumbnail[node.id] == "") {
+  if (META.thumbnail[node.id] == "") {
     dom.cropped_image.style.display = "none"
   } else {
     dom.cropped_image.style.display = "block"
@@ -88,9 +81,9 @@ function showNodeInfo(node) {
   dom.connections_from.innerHTML = ""
   dom.sidebar_data.style.display = "block"
   episode_display = []
-  for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
-    const episode = DATA.meta.episodes[node.id][i];
-    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><img src="${DATA.meta.episode_covers[episode.link.split("/")[episode.link.split("/").length-2]]}"><span><span class="episode-index">${episode.nr}</span>${episode.title}</span></a>`)
+  for (let i = 0; i < META.episodes[node.id].length; i++) {
+    const episode = META.episodes[node.id][i];
+    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><img src="${META.episode_covers[episode.link.split("/")[episode.link.split("/").length-2]]}"><span><span class="episode-index">${episode.nr}</span>${episode.title}</span></a>`)
   };
   dom.episodes.innerHTML = episode_display.join("");
   dom.episodes_number.innerText = `(${episode_display.length})`
@@ -151,7 +144,7 @@ function showNodeInfo(node) {
 
 function showEdgeInfo(a, b) {
   dom.intro.style.display = "none"
-  let link = DATA.meta.links[`${a} -> ${b}`];
+  let link = META.links[`${a} -> ${b}`];
 
   context = link.context;
   context = context.replaceAll(link.text, `<span class="highlighted">${link.text}</span>`)

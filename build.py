@@ -110,8 +110,19 @@ def get_dataframes():
         pd.read_sql("SELECT DISTINCT title, title_en FROM articles", con=db.conn).values
     )
     episodes = pd.read_sql("SELECT * FROM episodes", con=db.conn)
-    feed = podcastparser.parse('https://geschichten-aus-der-geschichte.podigee.io/feed/mp3', urllib.request.urlopen('https://geschichten-aus-der-geschichte.podigee.io/feed/mp3'))
-    episode_covers = {ep["link"].removesuffix("/").split("/")[-1]: ep.get("episode_art_url", feed["cover_url"]).split("=/")[-1] for ep in feed["episodes"]}
+    feed = podcastparser.parse(
+        "https://geschichten-aus-der-geschichte.podigee.io/feed/mp3",
+        urllib.request.urlopen(
+            "https://geschichten-aus-der-geschichte.podigee.io/feed/mp3"
+        ),
+    )
+    episode_covers = {
+        ep["link"]
+        .removesuffix("/")
+        .split("/")[-1]: ep.get("episode_art_url", feed["cover_url"])
+        .split("=/")[-1]
+        for ep in feed["episodes"]
+    }
     categories_df = pd.read_sql(
         "SELECT DISTINCT url, parent FROM links WHERE url LIKE 'Kategorie:%'",
         con=db.conn,
@@ -312,9 +323,13 @@ def refresh_data():
         f.write(
             "const DATA = "
             + json.dumps(
-                {"nodes": nodes, "edges": edges, "meta": meta}, separators=(",", ":")
+                {"nodes": nodes, "edges": edges}, separators=(",", ":")
             )
         )
+        f.close()
+
+    with open("visualize/data/meta.js", "w", encoding="utf-8") as f:
+        f.write("const META = " + json.dumps(meta, separators=(",", ":")))
         f.close()
 
     # clean up memory

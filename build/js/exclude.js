@@ -1,1 +1,1 @@
-const searchParams=new URLSearchParams(window.location.search);var connections_count=Object.assign({},...DATA.nodes.map((node=>({[node.id]:(node.size-10)*2}))));var fiftyplus=Object.keys(connections_count).filter((node=>connections_count[node]>50)).map((node=>node));var exclude=[];if(searchParams.has("exclude")){exclude=fiftyplus}
+const searchParams=new URLSearchParams(window.location.search);
