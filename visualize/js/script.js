@@ -90,7 +90,7 @@ function showNodeInfo(node) {
   episode_display = []
   for (let i = 0; i < DATA.meta.episodes[node.id].length; i++) {
     const episode = DATA.meta.episodes[node.id][i];
-    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><span class="episode-index">${episode.nr}</span>${episode.title}</a>`)
+    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><img src="${DATA.meta.episode_covers[episode.link.split("/")[episode.link.split("/").length-2]]}"><span><span class="episode-index">${episode.nr}</span>${episode.title}</span></a>`)
   };
   dom.episodes.innerHTML = episode_display.join("");
   dom.episodes_number.innerText = `(${episode_display.length})`
@@ -200,8 +200,8 @@ function importNetwork(save) {
   let edges = []
   let ids = {}
   const arrows = {
-    0: "to",
-    1: "to, from"
+    0: "to, from",
+    1: "to"
   }
 
   for (let i = 0; i < save.nodes.length; i++) {
