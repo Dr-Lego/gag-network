@@ -83,7 +83,11 @@ function showNodeInfo(node) {
   episode_display = []
   for (let i = 0; i < META.episodes[node.id].length; i++) {
     const episode = META.episodes[node.id][i];
-    episode_display.push(`<a class="episode-link" href=${episode.link} target="_blank"><img src="${META.episode_covers[episode.link.split("/")[episode.link.split("/").length-2]]}"><span><span class="episode-index">${episode.nr}</span>${episode.title}</span></a>`)
+    episode_display.push(
+      `<a class="episode-link" href=${episode.link} target="_blank" style="background-image: url(${META.episode_covers[episode.link.split("/")[episode.link.split("/").length - 2]]})">
+      <span><span class="episode-index">${episode.nr}</span>${episode.title}</span>
+      </a>`)
+      //      <img src="${META.episode_covers[episode.link.split("/")[episode.link.split("/").length - 2]]}">
   };
   dom.episodes.innerHTML = episode_display.join("");
   dom.episodes_number.innerText = `(${episode_display.length})`
@@ -168,7 +172,7 @@ function search(elem) {
     document.activeElement.blur()
     showNodeInfo(nodesDataset.get(elem.value));
     network.selectNodes([elem.value]);
-    neighbourhoodHighlight({'nodes':[elem.value]});
+    neighbourhoodHighlight({ 'nodes': [elem.value] });
     focus_node(elem.value);
   }
 }
@@ -283,10 +287,10 @@ dom.to_exclude.innerHTML = fiftyplus.join(", ")
 
 
 $(".button").click(function (event) {
-  data = SAVE[{"yes": "small", "no": "full"}[event.target.id]];
+  data = SAVE[{ "yes": "small", "no": "full" }[event.target.id]];
   delete SAVE;
   draw();
   dom.exclude_container.style.opacity = 0;
   dom.exclude_container.style.pointerEvents = "none";
-  setTimeout(function(){dom.exclude_container.remove()}, 1000)
+  setTimeout(function () { dom.exclude_container.remove() }, 1000)
 })

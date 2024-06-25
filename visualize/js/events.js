@@ -62,7 +62,7 @@ function neighbourhoodHighlight(params) {
         var i;
         var selectedNode = params.nodes[0];
 
-        // mark all nodes as hard to read.
+        // make all nodes and edges gray.
         for (var nodeId in allNodes) {
             allNodes[nodeId].color = "rgb(230,230,230)";
             allNodes[nodeId].font = { face: "Poppins", strokeWidth: 5, color: "grey" };
@@ -87,11 +87,37 @@ function neighbourhoodHighlight(params) {
         allNodes[selectedNode].color = nodeColor;
         allNodes[selectedNode].font = { face: "Poppins", strokeWidth: 5, color: "black" };
 
+    } else if (params.edges.length > 0) {
+        highlightActive = true;
+        var i;
+        var selectedEdge = params.edges[0];
+
+        // make all nodes and edges gray.
+        for (var nodeId in allNodes) {
+            allNodes[nodeId].color = "rgb(230,230,230)";
+            allNodes[nodeId].font = { face: "Poppins", strokeWidth: 5, color: "grey" };
+        };
+        for (var edgeId in allEdges) {
+            allEdges[edgeId].color = { color: "rgb(230,230,230)" };
+        };
+
+        var connectedNodes = network.getConnectedNodes(selectedEdge);
+
+        // all first degree nodes get their own color and their label back
+        for (i = 0; i < connectedNodes.length; i++) {
+            allNodes[connectedNodes[i]].color = nodeColor;
+            allNodes[connectedNodes[i]].font = { face: "Poppins", strokeWidth: 5, color: "black" };
+        };
+
+        // the main node gets its own color and its label back.
+        allEdges[selectedEdge].color = edgeColor;
+
     } else if (highlightActive === true) {
         // reset all nodes
         for (var nodeId in allNodes) {
             allNodes[nodeId].color = nodeColor;
         };
+        // reset all edges nodes
         for (var edgeId in allEdges) {
             allEdges[edgeId].color = { color: edgeColor };
         };
