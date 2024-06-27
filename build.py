@@ -2,7 +2,6 @@ from scraping._Database import Database
 import pandas as pd
 from selenium import webdriver
 import sys
-import math
 import podcastparser
 import urllib.request
 import sentence_splitter
@@ -48,9 +47,10 @@ def get_icon(title: str) -> str:
         "Person": "assets/icons/person.png",
         "Frau": "assets/icons/person.png",
         "Mann": "assets/icons/person.png",
-        "Krieg": "assets/icons/bomb.png",
-        "Konflikt": "assets/icons/bomb.png",
+        "Krieg": "assets/icons/explosion.png",
+        "Konflikt": "assets/icons/explosion.png",
         "Staat": "assets/icons/state.png",
+        "Königreich": "assets/icons/state.png",
         "Millionenstadt": "assets/icons/city.png",
     }
     for c in categories.get(title, []):
@@ -350,7 +350,7 @@ def refresh_data():
 
 def compress_save(save: dict[str, list[dict]]) -> dict:
     icons = {
-        "assets/icons/person.png": 1,
+        "assets/icons/explosion.png": 1,
         "assets/icons/bomb.png": 2,
         "assets/icons/state.png": 3,
         "assets/icons/city.png": 4,
