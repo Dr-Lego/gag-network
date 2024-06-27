@@ -16,7 +16,7 @@ def minimize(*args):
 
     for file in files:
         original = file.replace("./build", "./visualize")
-        if file.endswith(".js") and os.path.getsize(original) < (10**6)*0.4 and not ".min." in file: # smaller than 400kb
+        if file.endswith(".js") and os.path.getsize(original) < 40000 and not ".min." in file: # smaller than 400kb
             print(file)
             terser = subprocess.check_output(["terser", original, "--c", "--m", "reserved=['$','DATA', 'SAVE']"]).decode().strip("\n")
             with open(file, "w", encoding="utf-8") as f:
@@ -42,7 +42,7 @@ def minimize(*args):
                 f.write(text)
                 f.close()
                 
-        else:
+        elif not file.endswith("data.js"):
             data = open(original, "rb").read()
             with open(file, "wb") as f:
                 f.write(data)

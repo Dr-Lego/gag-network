@@ -32,7 +32,10 @@ const dom = {
   "exclude_container": document.getElementById("exclude-container")
 }
 
-// .visualize/js/events.js
+const credits = `Podcast: Geschichten aus der Geschichte von Daniel Meßner und Richard Hemmer (geschichte.fm).
+Wikipedia-Liste: Alle Wikipedia-Nutzer, die an der Episodenliste des Podcasts mitgearbeitet haben.
+Icons: flaticon.com und kenney.nl
+JavaScript-Bibliotheken: vis.js (visjs.org) und jQuery (jquery.com)`
 
 
 function draw() {

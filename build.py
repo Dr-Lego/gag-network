@@ -350,8 +350,8 @@ def refresh_data():
 
 def compress_save(save: dict[str, list[dict]]) -> dict:
     icons = {
-        "assets/icons/explosion.png": 1,
-        "assets/icons/bomb.png": 2,
+        "assets/icons/person.png": 1,
+        "assets/icons/explosion.png": 2,
         "assets/icons/state.png": 3,
         "assets/icons/city.png": 4,
     }
