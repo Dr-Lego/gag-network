@@ -1,6 +1,4 @@
-token.secret
-data/dump
-data/backup
+build/
 scraping/__pycache__
 set_env.sh
 build.sh
