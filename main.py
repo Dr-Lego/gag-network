@@ -19,7 +19,6 @@ def run_steps(steps):
         if result.returncode != 0:
             print(f"Error: '{step}' failed with return code {result.returncode}")
             sys.exit(1)
-    print("All steps completed successfully.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -32,3 +31,4 @@ if __name__ == "__main__":
     else:
         run_steps(DATA_STEPS)
         run_steps(PRELOAD_STEPS)
+    print("All steps completed successfully.")

@@ -3,6 +3,8 @@ data/dump
 data/backup
 scraping/__pycache__
 set_env.sh
+build.sh
+build.zip
 visualize/data/data.js
 visualize/data/meta.js
 visualize/data/save.js
