@@ -37,7 +37,7 @@ def minimize(*args):
             if os.path.getsize(file) > previous_size:
                 with open(file, "w", encoding="utf-8") as f:
                     f.write(terser)
-        elif file.endswith(".html"):
+        elif file.endswith(".html") and not file.startswith("_"):
             text = re.sub(r"(<!--[^-]*-->|\s|\n)+", r" ", open(original, "r", encoding="utf-8").read())
             text = re.sub(r" (?=<|$)|<\/[tl].>|<.p> *(<[p\/])| ?\/?(>)", r"\1\2", text, flags=re.IGNORECASE)
             with open(file, "w", encoding="utf-8") as f:

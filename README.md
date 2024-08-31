@@ -1,4 +1,4 @@
-![](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+![](https://raw.githubusercontent.com/Dr-Lego/gag-network/main/assets/banner.png?token=GHSAT0AAAAAACW23NGZ6J2GNZWBP35KMOHIZWTDALA)
 
 # `Geschichten aus der Geschichte` Network Visualizer
 
@@ -33,9 +33,10 @@ Significant effort has been put into optimizing the performance of this project 
 - Uses database indexing and optimized SQL queries to speed up data retrieval.
 - Pre-loads and compresses network data to reduce initial loading times for the visualization.
 
-# Prerequisites
+## Prerequisites
 - Chrome browser (for Selenium WebDriver, you can optionally change the used browser in the `build.py`file)
 - install required python libraries using `pip install -r requirements.txt`
+- install terser and roadroller using `sudo npm install terser roadroller -g`
 ## Downloading Wikipedia Dumps
 
 Open [dumps.wikimedia.org/dewiki](https://dumps.wikimedia.org/dewiki/) and [dumps.wikimedia.org/enwiki](https://dumps.wikimedia.org/enwiki/), respectively, and open the directory with the latest timestamp. If the dump is completed, download the two topmost files, called `*-pages-articles-multistream.xml.bz2`and `*-pages-articles-multistream-index.txt.bz2`
@@ -54,12 +55,66 @@ GAG_WIKIDUMP_EN_INDEX="/path/to/english/wikipedia-dump-index.txt.bz2"
 ```
 
 
-# Running the project
+## Running the Project
+
+The project's main script (`main.py`) orchestrates the entire process of data collection, processing, and visualization creation. You can run it in different modes depending on your needs.
 
 
-To update the connections database and create a new static build of the network, run `main.py`. 
+### Usage
 
-## Project Workflow
-- The script first scrapes episode data and related Wikipedia articles. (`scraping/episodes.py`)
-- It then processes the data, extracting links and creating a network structure. (`scraping/articles.py`, `scraping/links.py`)
-- The network data is saved in JavaScript files for visualization and preloaded network is created using Selenium WebDriver for faster initial loading. (`build.py`)
+You can run `main.py` in three different modes:
+
+1. **Full Process**
+
+   To run the entire process (refresh data and create save):
+
+   ```
+   python main.py
+   ```
+
+   This will execute all steps in order:
+   - Create the database
+   - Transform icons
+   - Build the network
+   - Minimize the build
+
+2. **Refresh Data Only**
+
+   To only refresh the data without creating a new save:
+
+   ```
+   python main.py --data
+   ```
+
+   This will run:
+   - Create the database
+   - Transform icons
+
+3. **Create Save Only**
+
+   To create a new preloaded network save without refreshing data:
+
+   ```
+   python main.py --preload
+   ```
+
+   This will run:
+   - Build the network
+   - Minimize the build
+
+### Output
+
+After running `main.py`, you will have:
+
+- A SQLite database with scraped and processed data
+- JavaScript files containing network data and metadata
+- A preloaded network save for faster initial loading
+
+### Notes
+
+- The full process can be time-consuming, especially when processing complete Wikipedia dumps. Ensure you have sufficient computational resources available.
+- If you encounter any issues, check the console output for error messages and ensure all prerequisites are correctly set up.
+- The `--data` option is useful when you want to update the underlying data without regenerating the visualization.
+- The `--preload` option is helpful when you've made changes to the visualization code but don't need to refresh the underlying data.
+
+After running the script, you can view the visualization by opening the `index.html` or the `build/index.html` file contained in the specified build folder in a web browser.
