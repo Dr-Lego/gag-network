@@ -1,0 +1,13 @@
+alive_progress==3.1.5
+beautifulsoup4==4.10.0
+numpy==1.21.5
+pandas==2.2.2
+Pillow==9.0.1
+Pillow==10.4.0
+podcastparser==0.6.10
+Requests==2.32.3
+selenium==4.24.0
+sentence_splitter==1.4
+Werkzeug==3.0.4
+wikitextparser==0.56.2
+xmltodict==0.13.0
