@@ -1,3 +1,5 @@
+![](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+
 # `Geschichten aus der Geschichte` Network Visualizer
 
 This project aims to visualize the intricate web of connections within the German podcast ["Geschichten aus der Geschichte"](https://www.geschichte.fm) (Stories from History). It creates a network visualization based on the podcast's [episode list on Wikipedia](https://de.wikipedia.org/w/index.php?title=Geschichten_aus_der_Geschichte_(Podcast)/Episodenliste&useskin=vector), showcasing how the Wikipedia articles of the topics mentioned in the podcast are interconnected.

@@ -23,6 +23,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from alive_progress import alive_bar
 
 from scraping._Database import Database
+import constants
 
 # Global variables
 edges = []
