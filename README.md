@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/Dr-Lego/gag-network/main/assets/banner.png?token=GHSAT0AAAAAACW23NGZ6J2GNZWBP35KMOHIZWTDALA)
+![](https://raw.githubusercontent.com/Dr-Lego/gag-network/main/assets/banner.png)
 
 # `Geschichten aus der Geschichte` Network Visualizer
 
@@ -14,16 +14,14 @@ Key features:
 - Generates a visual network of interconnected topics
 - Provides an interactive web interface to explore the network
 
-## Technical Details
-
-The project is primarily written in Python and uses various libraries for web scraping, data processing, and visualization. It includes:
-
-- Web scraping using `requests`, `BeautifulSoup`, and `Selenium`
-- Data processing with `pandas` and `numpy`
-- Text parsing with `wikitextparser`
-- Multiprocessing for improved performance
-- SQLite database for data storage
-- JavaScript-based network visualization, using `vis.js`
+### Tech Stack
+- Python
+- Web scraping: `requests`, `BeautifulSoup`, and `Selenium`
+- Data processing: `pandas` and `numpy`
+- Text parsing: `wikitextparser` (it speaks Wikipedia fluently)
+- Multiprocessing
+- SQLite database 
+- JavaScript-based visualization with `vis.js` 
 
 ### Performance Optimization
 
@@ -34,12 +32,14 @@ Significant effort has been put into optimizing the performance of this project 
 - Pre-loads and compresses network data to reduce initial loading times for the visualization.
 
 ## Prerequisites
-- Chrome browser (for Selenium WebDriver, you can optionally change the used browser in the `build.py`file)
-- install required python libraries using `pip install -r requirements.txt`
-- install terser and roadroller using `sudo npm install terser roadroller -g`
-## Downloading Wikipedia Dumps
+- Chrome browser for Selenium WebDriver (or change it in build.py)
+- Python packages: `pip install -r requirements.txt`
+- Node.js tools: `sudo npm install terser roadroller -g`
 
-Open [dumps.wikimedia.org/dewiki](https://dumps.wikimedia.org/dewiki/) and [dumps.wikimedia.org/enwiki](https://dumps.wikimedia.org/enwiki/), respectively, and open the directory with the latest timestamp. If the dump is completed, download the two topmost files, called `*-pages-articles-multistream.xml.bz2`and `*-pages-articles-multistream-index.txt.bz2`
+## Downloading Wikipedia Dumps
+1. Visit [dumps.wikimedia.org/dewiki](https://dumps.wikimedia.org/dewiki/) and d[dumps.wikimedia.org/enwiki](https://dumps.wikimedia.org/enwiki/)
+2. Choose the latest timestamp directory
+3. Download the two topmost files: `*-pages-articles-multistream.xml.bz2` and `*-pages-articles-multistream-index.txt.bz2`
 
 ## Setting Up Environment Variables
 
@@ -117,4 +117,4 @@ After running `main.py`, you will have:
 - The `--data` option is useful when you want to update the underlying data without regenerating the visualization.
 - The `--preload` option is helpful when you've made changes to the visualization code but don't need to refresh the underlying data.
 
-After running the script, you can view the visualization by opening the `index.html` or the `build/index.html` file contained in the specified build folder in a web browser.
+After running the script, you can view the visualization by opening the `visualize/index.html` or `build/index.html` in a web browser.
