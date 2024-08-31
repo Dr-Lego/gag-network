@@ -1,48 +1,55 @@
-from scraping._Database import Database
-import pandas as pd
-from selenium import webdriver
+"""
+Network Creation and Data Processing Script
+
+This script creates nodes and edges of a network, pre-loads the network,
+and processes data from various sources including databases and web feeds.
+"""
+
 import sys
-import podcastparser
-import urllib.request
-import sentence_splitter
-import numpy as np
-from multiprocessing import Pool
-from selenium.webdriver.support.ui import WebDriverWait
-import itertools
+import re
 import json
 import ast
+import urllib.request
+from multiprocessing import Pool
+import itertools
+
 import numpy as np
+import pandas as pd
+import podcastparser
 import wikitextparser as wtp
+import sentence_splitter
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 from alive_progress import alive_bar
-import re
 
+from scraping._Database import Database
 
-"""
-Create nodes and edges of the network and pre-load the network.
-"""
-
-
-edges: list
-nodes: list
-categories: dict
-links: pd.DataFrame
-all_links: pd.DataFrame
-titles: pd.DataFrame
-articles: pd.DataFrame
-plaintext: dict[dict]
-translations: dict
-episodes: pd.DataFrame
-edges: list
-nodes: list
-meta: dict
-episode_covers: dict
+# Global variables
+edges = []
+nodes = []
+categories = {}
+links = pd.DataFrame()
+all_links = pd.DataFrame()
+titles = pd.DataFrame()
+articles = pd.DataFrame()
+plaintext = {}
+translations = {}
+episodes = pd.DataFrame()
+meta = {}
+episode_covers = {}
 
 
 def get_icon(title: str) -> str:
-    global categories
     """
     Retrieves the appropriate icon for the given category title.
+
+    Args:
+        title (str): The category title.
+
+    Returns:
+        str: The path to the icon file, or None if not found.
     """
+    global categories
     category_icons = {
         "Person": "assets/icons/person.png",
         "Frau": "assets/icons/person.png",
@@ -60,22 +67,31 @@ def get_icon(title: str) -> str:
 
 
 def get_plaintext(args):
+    """
+    Extracts plain text content from article data.
+
+    Args:
+        args (tuple): A tuple containing the index and article data.
+
+    Returns:
+        tuple: A tuple containing the article title and a dictionary of plain text content.
+    """
     i, t = args
     return (
         t.title,
         {
             "de": wtp.parse(
                 re.sub(
-                    '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
+                    r"[^<]+<\/ref>",
                     " ",
-                    t.content.replace("<br />", "").replace("<br>", ""),
+                    t.content.replace("", "").replace("", ""),
                 )
             ).plain_text(),
             "en": wtp.parse(
                 re.sub(
-                    '<ref(\sname="[^"]+")?>[^<]+<\/ref>',
+                    r"[^<]+<\/ref>",
                     " ",
-                    t.content_en.replace("<br />", "").replace("<br>", ""),
+                    t.content_en.replace("", "").replace("", ""),
                 )
             ).plain_text(),
         },
@@ -83,6 +99,9 @@ def get_plaintext(args):
 
 
 def get_dataframes():
+    """
+    Retrieves data from the database and processes it into various DataFrames and dictionaries.
+    """
     global links, all_links, titles, articles, episodes, categories, translations, plaintext, episode_covers
     db = Database()
     link_filter = """SELECT DISTINCT {} FROM links WHERE url IN (
@@ -137,9 +156,16 @@ def get_dataframes():
 
 
 def get_edges() -> list:
+    """
+    Generates edges for the network based on link data.
+
+    Returns:
+        list: A list of edge dictionaries.
+    """
     global links
     edges = []
     hash_data = []
+
     for i, a in links.iterrows():
         data = {
             "id": f"{a['parent']}-{a['url']}",
@@ -161,11 +187,16 @@ def get_edges() -> list:
             hash_data.append(json.dumps(data, sort_keys=True))
         else:
             edges[hash_data.index(hashed)]["arrows"] = "to, from"
-
     return edges
 
 
 def get_nodes() -> list:
+    """
+    Generates nodes for the network based on title data and connected nodes.
+
+    Returns:
+        list: A list of node dictionaries.
+    """
     global edges, titles
     connected_nodes = list(
         itertools.chain.from_iterable([[e["from"], e["to"]] for e in edges])
@@ -181,11 +212,20 @@ def get_nodes() -> list:
         if icon:
             nodes[i]["image"] = icon
             nodes[i]["shape"] = "circularImage"
-
     return nodes
 
 
 def link_context(text, link: pd.Series):
+    """
+    Extracts context for a given link within an article's text.
+
+    Args:
+        text (str): The article text.
+        link (pd.Series): A series containing link information.
+
+    Returns:
+        str: The extracted context or "Vorschau nicht verfügbar" if not found.
+    """
     global plaintext
     # get small context of link to find correct location in plaintext article
     wikitext = wtp.parse(text).plain_text(replace_wikilinks=False)
@@ -238,6 +278,16 @@ def link_context(text, link: pd.Series):
 
 
 def article_meta(args):
+    """
+    Extracts metadata for an article.
+
+    Args:
+        args (tuple): A tuple containing article data.
+
+    Returns:
+        dict: A dictionary of article metadata.
+    """
+    global articles, links, episodes, translations
     global articles, links, episodes, translations
     t = pd.Series(args[1])
     meta = {}
@@ -255,6 +305,15 @@ def article_meta(args):
 
 
 def link_meta(args):
+    """
+    Extracts metadata for a link.
+
+    Args:
+        args (tuple): A tuple containing link data.
+
+    Returns:
+        tuple: A tuple containing link identifier and metadata.
+    """
     global all_links, articles, plaintext
     a = pd.Series(dict(zip(("url", "parent"), args)))
     link = (
@@ -283,6 +342,12 @@ def link_meta(args):
 
 
 def get_metadata() -> dict:
+    """
+    Collects and processes metadata for articles and links.
+
+    Returns:
+        dict: A dictionary containing all metadata.
+    """
     global articles, links, episode_covers
     meta = {"translations": translations, "episode_covers": episode_covers}
     _meta = []
@@ -313,6 +378,9 @@ def get_metadata() -> dict:
 
 
 def refresh_data():
+    """
+    Refreshes all data by fetching from the database and processing it.
+    """
     global edges, nodes, categories, links, all_links, titles, articles, translations, episodes, edges, nodes, meta, plaintext
     get_dataframes()
     edges = get_edges()
@@ -322,9 +390,7 @@ def refresh_data():
     with open("visualize/data/data.js", "w", encoding="utf-8") as f:
         f.write(
             "const DATA = "
-            + json.dumps(
-                {"nodes": nodes, "edges": edges}, separators=(",", ":")
-            )
+            + json.dumps({"nodes": nodes, "edges": edges}, separators=(",", ":"))
         )
         f.close()
 
@@ -349,6 +415,15 @@ def refresh_data():
 
 
 def compress_save(save: dict[str, list[dict]]) -> dict:
+    """
+    Compresses the save data for efficient storage.
+
+    Args:
+        save (dict): The save data to compress.
+
+    Returns:
+        dict: The compressed save data.
+    """
     icons = {
         "assets/icons/person.png": 1,
         "assets/icons/explosion.png": 2,
@@ -391,6 +466,8 @@ def compress_save(save: dict[str, list[dict]]) -> dict:
 
 
 class wait_for_stabilized(object):
+    """A custom wait condition for Selenium WebDriver."""
+
     def __init__(self) -> None:
         pass
 
@@ -399,6 +476,9 @@ class wait_for_stabilized(object):
 
 
 def create_save():
+    """
+    Creates and saves the network data for different sizes.
+    """
     save = {}
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")

@@ -21,21 +21,23 @@ from scraping._Index import Index
 index_de: Index
 index_en: Index
 
-
 def foo(f):
+    """Execute a function and return its result."""
     return f()
 
 def none(*args):
+    """Return None regardless of input."""
     return None
 
 def make_request(titles):
+    """Make an API request to Wikipedia for language links."""
     return json.loads(requests.get(
         f"https://de.wikipedia.org/w/api.php?action=query&prop=langlinks&titles={'|'.join(titles)}&lllang=en&formatversion=2&lllimit=max&format=json&redirects="
     ).text)["query"]
 
-
 def in_english(articles: list) -> list[dict]:
-    # get translations and redirects using the wikipedia api
+    """Get English translations and redirects for given articles."""
+    # Split articles into chunks and make API requests
     chunks = np.array_split(
         [urllib.parse.quote_plus(a[1].replace(" ", "_")) for a in articles],
         np.arange(0, len(articles), 50),
@@ -47,6 +49,7 @@ def in_english(articles: list) -> list[dict]:
                 r.append(_)
                 bar()
 
+    # Process API responses
     pages = list(itertools.chain.from_iterable([chunk.get("pages", []) for chunk in r]))
     redirected = list(
         itertools.chain.from_iterable([chunk.get("redirects", []) for chunk in r])
@@ -61,8 +64,8 @@ def in_english(articles: list) -> list[dict]:
 
     return [translations, redirects]
 
-
 def get_page(path: str, title: str, start_byte: int, end_byte: int):
+    """Retrieve and parse a page from a Wikipedia dump file."""
     with open(path, "rb") as file:
         file.seek(start_byte)
         readback = file.read(end_byte - start_byte - 1)
@@ -72,8 +75,8 @@ def get_page(path: str, title: str, start_byte: int, end_byte: int):
     page = soup.find("title", string=title).parent
     return xmltodict.parse(str(page))["page"]
 
-
 def api_call(title: str):
+    """Make an API call to Wikipedia's REST API for page summary."""
     r = json.loads(
         requests.get(
             "https://de.wikipedia.org/api/rest_v1/page/summary/" + title,
@@ -82,36 +85,40 @@ def api_call(title: str):
     )
     return r
 
-
 def scrape_articles(
     db=tuple[sqlite3.Cursor, sqlite3.Connection],
     mode: Literal["update", "refresh"] = "refresh",
 ) -> None:
+    """Scrape articles from Wikipedia and store them in the database."""
     global index_de, index_en
 
+    # Fetch episodes from the database
     episodes = pd.read_sql("SELECT * FROM episodes", con=db[1])
     episodes[["topics", "links"]] = episodes[["topics", "links"]].map(ast.literal_eval)
 
+    # Prepare list of articles to scrape
     articles = list(zip(episodes["nr"], episodes["topics"]))
     articles = [[(ep[0], a) for a in ep[1]] for ep in articles]
     articles = list(itertools.chain.from_iterable(articles))
 
     if mode == "update":
+        # Filter out articles already in the database
         _keys = [
             "/wiki/" + k
             for k in pd.read_sql("SELECT * FROM articles", con=db[1])["key"].to_list()
         ]
         articles = list([a for a in articles if a[1] not in _keys])
 
+    # Get English translations and redirects
     translations, redirects = in_english(articles)
 
     original_articles = {redirects.get(title, title): title for nr, title in articles}
-    # titles mapped to episodes
     episodes_dict: MultiDict = MultiDict(
         [(redirects.get(title, title), nr) for nr, title in articles]
     )
     articles = [redirects.get(title, title) for nr, title in articles]
 
+    # Fetch article indexes
     index: dict[str, pd.DataFrame] = {
         "de": pd.read_sql(
             f"SELECT * FROM pages WHERE title IN {tuple(set([title for title in articles]))}",
@@ -129,6 +136,7 @@ def scrape_articles(
     wikidump_de: IO = open(constants.WIKIDUMP_DE, "rb")
     wikidump_en: IO = open(constants.WIKIDUMP_EN, "rb")
 
+    # Scrape and process articles
     with alive_bar(len(index["de"].index), title=f"refreshing articles") as bar:
         iterations = 0
         for id, row in index["de"].iterrows():
@@ -138,7 +146,7 @@ def scrape_articles(
             if not row_en.empty:
                 row_en = row_en.iloc[0]
 
-            # get german page, english page and summary/thumbnail in parallel
+            # Prepare processes for parallel execution
             processes: dict[str, functools.partial] = {
                 "de": functools.partial(
                     get_page,
@@ -165,16 +173,17 @@ def scrape_articles(
                 "api": functools.partial(api_call, row.title),
             }
 
+            # Execute processes in parallel
             page: list
             with Pool(3) as pool:
                 page = pool.map(foo, processes.values())
-
                 pool.close()
 
             page: dict = dict(zip(("de", "en", "api"), page))
             if not page["en"]:
                 del page["en"]
 
+            # Insert article data into the database
             db[0].execute(
                 f"INSERT INTO articles (key, title, title_en, id, episode, content, content_en, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
@@ -201,10 +210,8 @@ def scrape_articles(
     wikidump_de.close()
     wikidump_en.close()
 
-    return
-
-
 def refresh_articles(mode: Literal["update", "refresh"] = "refresh") -> pd.DataFrame:
+    """Refresh or update articles in the database."""
     global index_en, index_de
     index_de = Index(constants.WIKIDUMP_DE_INDEX)
     index_en = Index(constants.WIKIDUMP_EN_INDEX)

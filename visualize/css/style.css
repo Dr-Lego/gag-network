@@ -1,16 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
-html,
-body {
+html, body {
     font-size: 11pt;
     font-family: Poppins, Arial, Helvetica, sans-serif;
     height: 100%;
     width: 100%;
     display: flex;
     flex-direction: row;
-    margin: 0px;
+    margin: 0;
 }
-
 
 #network {
     width: 100%;
@@ -33,20 +31,23 @@ body {
     opacity: 1;
 }
 
-#exclude-container {
+#exclude-container, #loading-container {
     position: absolute;
     z-index: 1000;
     width: 100%;
     height: 100%;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
+    margin: 0;
+    transition: opacity 0.5s ease 0s;
+}
+
+#exclude-container {
     padding: 0;
     background-color: white;
     background-image: url("../assets/preview_blurred.png");
     background-repeat: no-repeat;
     background-size: cover;
-    margin: 0px;
-    transition: opacity 0.5s ease 0s;
     font-size: large !important;
     color: grey !important;
     text-align: center;
@@ -63,12 +64,9 @@ body {
     border-radius: 2em;
 }
 
-
 .buttons {
     width: 95%;
-    margin-top: 50px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 50px auto 0;
 }
 
 .button {
@@ -99,15 +97,7 @@ body {
 }
 
 #loading-container {
-    position: absolute;
-    z-index: 1000;
-    width: 100%;
-    height: 100%;
-    top: 0px;
-    left: 0px;
     background-color: white;
-    margin: 0px;
-    transition: opacity 0.5s ease 0s;
 }
 
 .fade-out {
@@ -115,23 +105,22 @@ body {
     pointer-events: none;
 }
 
-#loading {
+#loading, #comment {
     position: absolute;
-    top: 40%;
-    font-size: 48pt;
-    font-family: "Poppins", Arial, Helvetica, sans-serif;
-    font-weight: bold;
     width: 100%;
     text-align: center;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
+}
+
+#loading {
+    top: 40%;
+    font-size: 48pt;
+    font-weight: bold;
 }
 
 #comment {
-    position: absolute;
     top: 55%;
     font-size: 20pt;
-    font-family: "Poppins", Arial, Helvetica, sans-serif;
-    width: 100%;
-    text-align: center;
     color: lightgray;
     font-style: italic;
 }
@@ -143,7 +132,6 @@ body {
     font-size: 80%;
 }
 
-
 #sidebar-wrapper {
     height: 100%;
     width: 25%;
@@ -151,12 +139,10 @@ body {
     overflow: hidden;
 }
 
-
 #sidebar {
     height: calc(100% - 58px);
     width: calc(100% - 20px);
-    padding-left: 10px;
-    padding-right: 10px;
+    padding: 0 10px;
     z-index: 10;
     background: white;
     overflow: hidden auto;
@@ -178,17 +164,12 @@ body {
     transition: all 0.4s ease-in-out;
 }
 
-/* #info:hover {
-    opacity: 0.5 !important;
-} */
-
 hr {
     color: rgb(240, 240, 240);
 }
 
 .title {
-    margin: 10px;
-    margin-top: 20px;
+    margin: 20px 10px 10px;
     font-size: xx-large;
 }
 
@@ -198,21 +179,20 @@ hr {
 
 #title_en {
     height: min-content;
-    margin-top: 0px;
+    margin-top: 0;
     font-size: large;
 }
 
-.title>a {
-    color: rgba(0, 0, 0, 1);
+.title > a {
+    color: black;
     text-decoration: none;
 }
 
-#title_en>a {
+#title_en > a {
     color: grey;
 }
 
-.title>a:hover {
-    /* color: rgba(0, 0, 0, 0.5); */
+.title > a:hover, #intro a:hover {
     color: #d34823 !important;
     text-decoration: underline;
 }
@@ -227,21 +207,14 @@ hr {
     text-decoration: none;
 }
 
-#intro a:hover {
-    color: #d34823 !important;
-    text-decoration: underline;
-}
-
 #stats {
     text-align: center;
-    margin-top: 40px;
+    margin: 40px -10px -10px;
     border-top: 2px solid rgb(240, 240, 240);
     border-bottom: 2px solid rgb(240, 240, 240);
     color: grey;
     font-size: medium;
     padding: 20px;
-    margin-left: -10px;
-    margin-bottom: -10px;
 }
 
 #credits {
@@ -255,8 +228,7 @@ hr {
 }
 
 #description {
-    margin: 10px;
-    margin-top: 0;
+    margin: 0 10px 10px;
     color: grey;
 }
 
@@ -272,8 +244,7 @@ hr {
 }
 
 #episodes-wrapper {
-    margin-top: 20px;
-    margin: 10px;
+    margin: 20px 10px 10px;
 }
 
 .episode-link {
@@ -282,20 +253,16 @@ hr {
     padding: 10px;
     display: flex;
     flex-direction: row;
-    margin: 0px;
-    margin-bottom: 10px;
+    margin: 0 0 10px;
     background: rgb(245, 245, 245);
     border-radius: 0.3em;
     align-items: center;
     background-size: contain;
     background-repeat: no-repeat;
     background-blend-mode: overlay;
-    /* transition: all 0.15s ease-in-out; */
 }
 
 .episode-link img {
-    width: auto;
-    height: auto;
     max-width: 90px;
     max-height: 90px;
     margin: -10px 10px -10px -10px;
@@ -314,15 +281,13 @@ hr {
 }
 
 .connections-wrapper {
-    margin-top: 20px;
+    margin: 20px 5px 10px;
     display: flex;
     flex-wrap: wrap;
     align-content: space-between;
     justify-content: flex-start;
     align-items: center;
     flex-direction: row;
-    margin: 10px;
-    margin-left: 5px;
 }
 
 #connections-from-section {
@@ -355,24 +320,16 @@ hr {
     outline: none;
     border: 0;
     border-bottom: 2px solid rgb(240, 240, 240);
-    padding: 12px 47px;
-    padding-right: 15px;
+    padding: 12px 47px 12px 15px;
 }
 
 .noselect {
     -webkit-touch-callout: none;
-    /* iOS Safari */
     -webkit-user-select: none;
-    /* Safari */
     -khtml-user-select: none;
-    /* Konqueror HTML */
     -moz-user-select: none;
-    /* Old versions of Firefox */
     -ms-user-select: none;
-    /* Internet Explorer/Edge */
     user-select: none;
-    /* Non-prefixed version, currently
-                                    supported by Chrome, Edge, Opera and Firefox */
 }
 
 .not-available {
@@ -383,15 +340,12 @@ hr {
     width: 100%;
 }
 
-h2,
-h3 {
-    margin: 10px;
-    margin-top: 20px;
+h2, h3 {
+    margin: 20px 10px 10px;
 }
 
 #context-title {
-    margin: 0 !important;
-    margin-bottom: 10px;
+    margin: 0 0 10px !important;
 }
 
 .theme-link {
@@ -404,7 +358,7 @@ h3 {
 }
 
 #sidebar-data {
-    display: none
+    display: none;
 }
 
 .highlighted {
