@@ -53,13 +53,18 @@ html, body {
     text-align: center;
 }
 
+#exclude-flex {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #exclude-box {
     width: 40%;
     background-color: white;
     padding: 50px;
-    margin-top: 20%;
-    margin-left: auto;
-    margin-right: auto;
     border: 2px solid rgb(240, 240, 240);
     border-radius: 2em;
 }
@@ -217,14 +222,15 @@ hr {
     padding: 20px;
 }
 
-#credits {
+.small-link {
     display: inline-block;
-    width: 100%;
     text-align: center;
     color: grey;
     cursor: pointer;
     margin-top: 20px;
     font-size: 0.7rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
 #description {
