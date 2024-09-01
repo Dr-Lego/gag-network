@@ -118,3 +118,4 @@ After running `main.py`, you will have:
 - The `--preload` option is helpful when you've made changes to the visualization code but don't need to refresh the underlying data.
 
 After running the script, you can view the visualization by opening the `visualize/index.html` or `build/index.html` in a web browser.
+An up-to-date build can also be found at [Dr-Lego/gag-network-build](https://github.com/Dr-Lego/gag-network-build).
