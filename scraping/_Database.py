@@ -13,6 +13,7 @@ class Database(object):
             path (str): Path to the SQLite database file. Defaults to constants.DATABASE.
         """
         self.path = path
+        print(f"Connecting to database: {self.path}")
         self.conn: sqlite3.Connection = sqlite3.connect(self.path)
         self.c: sqlite3.Cursor = self.conn.cursor()
         
