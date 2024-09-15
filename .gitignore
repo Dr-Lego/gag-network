@@ -7,3 +7,4 @@ visualize/data/data.js
 visualize/data/meta.js
 visualize/data/save.js
 miscellaneous/count_lines.sh
+venv
