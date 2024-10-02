@@ -485,7 +485,7 @@ def create_save():
     driver = webdriver.Chrome(options=options)
     for size, name in {1000: "full", 80: "small"}.items():
         driver.get(
-            f"file:///home/raphael/PROGRAMMING/Projekte/GAG/visualize/_preload.html?exclude={size}"
+            f"file:///home/raphael/Programming/Projects/GAG/visualize/_preload.html?exclude={size}"
         )
         progress = [0]
         iterations = 3000

@@ -175,7 +175,7 @@ def scrape_articles(
 
             # Execute processes in parallel
             page: list
-            with Pool(3) as pool:
+            with Pool() as pool:
                 page = pool.map(foo, processes.values())
                 pool.close()
 
