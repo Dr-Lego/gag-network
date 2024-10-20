@@ -9,13 +9,16 @@ DATA_STEPS = [
 
 PRELOAD_STEPS = [
     "build.py --preload",
-    "minimize_build.py",
+    "cd frontend && npm run build && cd .."
 ]
 
 def run_steps(steps):
     for step in steps:
         print(f"Executing: {step}")
-        result = subprocess.run(f"python3 {step}", shell=True, check=False)
+        if ".py" in step:
+            result = subprocess.run(f"python3 {step}", shell=True, check=False)
+        else:
+            result = subprocess.run(step, shell=True, check=False)
         if result.returncode != 0:
             print(f"Error: '{step}' failed with return code {result.returncode}")
             sys.exit(1)

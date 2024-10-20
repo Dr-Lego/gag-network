@@ -2,11 +2,11 @@ import os
 from PIL import Image
 
 """
-add opacity + padding to all icons in 'visualize/assets/standard_icons' and save them to 'visualize/assets/icons
+add opacity + padding to all icons in './icons' and save them to './frontend/static/assets/icons
 """
 
 # Define the path to the folder containing the images
-folder_path = "visualize/assets/standard_icons"
+folder_path = "icons"
 
 # Define the new canvas size
 new_width = 850
@@ -39,4 +39,4 @@ for filename in os.listdir(folder_path):
                 pixels[x, y] = (r, g, b, 100)
 
     # Save the new image
-    new_img.save(os.path.join("visualize/assets/icons", filename))
+    new_img.save(os.path.join("frontend/static/assets/icons", filename))

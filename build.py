@@ -387,14 +387,14 @@ def refresh_data():
     nodes = get_nodes()
     meta = get_metadata()
 
-    with open("visualize/data/data.js", "w", encoding="utf-8") as f:
+    with open("frontend/src/lib/data/data.js", "w", encoding="utf-8") as f:
         f.write(
             "const DATA = "
             + json.dumps({"nodes": nodes, "edges": edges}, separators=(",", ":"))
         )
         f.close()
 
-    with open("visualize/data/meta.js", "w", encoding="utf-8") as f:
+    with open("frontend/src/lib/data/meta.js", "w", encoding="utf-8") as f:
         f.write("const META = " + json.dumps(meta, separators=(",", ":")))
         f.close()
 
@@ -485,7 +485,7 @@ def create_save():
     driver = webdriver.Chrome(options=options)
     for size, name in {1000: "full", 80: "small"}.items():
         driver.get(
-            f"file:///home/raphael/Programming/Projects/GAG/visualize/_preload.html?exclude={size}"
+            f"file:///home/raphael/Programming/Projects/GAG/frontend/_preload.html?exclude={size}"
         )
         progress = [0]
         iterations = 3000
@@ -498,7 +498,7 @@ def create_save():
 
     driver.quit()
 
-    with open("visualize/data/save.js", "w", encoding="utf-8") as f:
+    with open("frontend/src/lib/data/save.js", "w", encoding="utf-8") as f:
         f.write("const SAVE = " + json.dumps(save, separators=(",", ":")))
         f.close()
 

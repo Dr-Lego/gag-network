@@ -3,8 +3,15 @@ scraping/__pycache__
 set_env.sh
 build.sh
 build.zip
-visualize/data/data.js
-visualize/data/meta.js
-visualize/data/save.js
+frontend/src/lib/data/data.js
+frontend/src/lib/data/meta.js
+frontend/src/lib/data/save.js
 miscellaneous/count_lines.sh
 .venv
+
+
+# Frontend
+frontend/node_modules
+frontend/.svelte-kit
+frontend/build
+frontend/archive

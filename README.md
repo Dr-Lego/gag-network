@@ -18,10 +18,11 @@ Key features:
 - Python
 - Web scraping: `requests`, `BeautifulSoup`, and `Selenium`
 - Data processing: `pandas` and `numpy`
-- Text parsing: `wikitextparser` (it speaks Wikipedia fluently)
+- Text parsing: `wikitextparser`
 - Multiprocessing
 - SQLite database 
-- JavaScript-based visualization with `vis.js` 
+- SvelteKit as JavaScript frontend framework
+- Network visualization with `vis.js` 
 
 ### Performance Optimization
 
@@ -35,6 +36,7 @@ Significant effort has been put into optimizing the performance of this project 
 - Chrome browser for Selenium WebDriver (or change it in build.py)
 - Python packages: `pip install -r requirements.txt`
 - Node.js tools: `sudo npm install terser roadroller -g`
+- Initialize frontend: `cd frontend && npm install`
 
 ## Downloading Wikipedia Dumps
 1. Visit [dumps.wikimedia.org/dewiki](https://dumps.wikimedia.org/dewiki/) and d[dumps.wikimedia.org/enwiki](https://dumps.wikimedia.org/enwiki/)
@@ -75,8 +77,8 @@ You can run `main.py` in three different modes:
    This will execute all steps in order:
    - Create the database
    - Transform icons
-   - Build the network
-   - Minimize the build
+   - Load the network
+   - Build the frontend
 
 2. **Refresh Data Only**
 
@@ -86,7 +88,7 @@ You can run `main.py` in three different modes:
    python main.py --data
    ```
 
-   This will run:
+   This will:
    - Create the database
    - Transform icons
 
@@ -98,9 +100,9 @@ You can run `main.py` in three different modes:
    python main.py --preload
    ```
 
-   This will run:
-   - Build the network
-   - Minimize the build
+   This will:
+   - Load the network
+   - Build the frontend
 
 ### Output
 
@@ -117,5 +119,5 @@ After running `main.py`, you will have:
 - The `--data` option is useful when you want to update the underlying data without regenerating the visualization.
 - The `--preload` option is helpful when you've made changes to the visualization code but don't need to refresh the underlying data.
 
-After running the script, you can view the visualization by opening the `visualize/index.html` or `build/index.html` in a web browser.
+After running the script, you can view the visualization by opening `build/index.html` in a web browser.
 An up-to-date build can also be found at [Dr-Lego/gag-network-build](https://github.com/Dr-Lego/gag-network-build).
