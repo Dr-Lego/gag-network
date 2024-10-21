@@ -1,5 +1,5 @@
 <script>
-	import gag_logo from '$lib/assets/gag-logo.png';
+	const gag_logo = new URL('/assets/gag-logo.png', import.meta.url).href
 
 	const credits = `Podcast: Geschichten aus der Geschichte von Daniel Meßner und Richard Hemmer (geschichte.fm).
 Wikipedia-Liste: Alle Wikipedia-Nutzer, die an der Episodenliste des Podcasts mitgearbeitet haben.

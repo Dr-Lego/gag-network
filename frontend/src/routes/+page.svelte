@@ -6,7 +6,7 @@
 	import { options } from '$lib/data/options.js';
 	import distance from 'jaro-winkler';
 	import vis from 'vis-network/dist/vis-network.min.js';
-	import MagnifyingGlass from '$lib/assets/search.svg';
+	const MagnifyingGlass = new URL('/assets/search.svg', import.meta.url).href
 	import Network from '$lib/network.js';
 
 	let network;

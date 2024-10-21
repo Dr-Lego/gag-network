@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import blurred from '$lib/assets/preview_blurred.png';
+	const blurred = new URL('/assets/preview_blurred.png', import.meta.url).href
 
 	export let to_exclude = '';
 	export let hidden = false;
