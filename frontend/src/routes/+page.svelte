@@ -6,6 +6,7 @@
 	import { options } from '$lib/data/options.js';
 	import distance from 'jaro-winkler';
 	import vis from 'vis-network/dist/vis-network.min.js';
+	import MagnifyingGlass from '$lib/assets/search.svg';
 	import Network from '$lib/network.js';
 
 	let network;
@@ -273,7 +274,7 @@
 		type="text"
 		id="search"
 		class="relative w-full py-4 pl-4 font-sans text-xl text-center bg-center bg-no-repeat border-b-2 outline-none border-light"
-		style="background: url('/assets/search.svg') 12px 50% / 20pt no-repeat white;"
+		style='background: url("{MagnifyingGlass}") 12px 50% / 20pt no-repeat white;'
 		list="search-suggestions"
 		spellcheck="false"
 		placeholder="Finde ein Thema..."

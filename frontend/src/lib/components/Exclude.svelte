@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import blurred from '$lib/assets/preview_blurred.png';
 
 	export let to_exclude = '';
 	export let hidden = false;
@@ -19,9 +20,9 @@
 	class="absolute {hidden
 		? 'pointer-events-none opacity-0'
 		: ''} left-0 top-0 z-50 m-0 h-full w-full bg-white bg-cover bg-no-repeat p-0 text-center text-lg text-gray-500 transition-all duration-200 ease-in-out"
-	style="background-image: url('/assets/preview_blurred.png');"
+	style="background-image: url({blurred});"
 >
-	<div id="exclude-flex" class="flex h-full w-full items-center justify-center">
+	<div id="exclude-flex" class="flex items-center justify-center w-full h-full">
 		<section
 			id="exclude-box"
 			class="w-[40%] rounded-3xl border-2 border-light bg-white p-14 text-semilarge"
