@@ -100,13 +100,12 @@
 
 			function exportNetwork() {
 				let positions = network.getPositions();
-				var _nodes = [];
-				for (const key in nodesDataset._data) {
-					if (network.getConnectedNodes(nodesDataset._data[key].id).length > 0) {
-						_nodes.push({ ...nodesDataset._data[key], ...positions[key] });
-					}
-				}
-				var _edges = Object.values(edgesDataset._data);
+
+				var _nodes = DATA.nodes.map((node) => ({ ...node, ...positions[node.id] }));
+				_nodes = _nodes.filter((node) => network.getConnectedNodes(node.id).length > 0);
+
+				var _edges = DATA.edges;
+
 				return { nodes: _nodes, edges: _edges };
 			}
 

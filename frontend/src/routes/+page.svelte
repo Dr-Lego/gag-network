@@ -230,7 +230,6 @@
 
 	function draw() {
 		[nodesDataset, edgesDataset] = Object.values(importNetwork(data));
-		let _edges = Object.values(edgesDataset._data);
 
 		// create a network
 		var container = document.getElementById('network');
@@ -242,9 +241,11 @@
 
 		network = new Network(container, _data, options, edges);
 
+		console.log()
+
 		stats = {
 			nodes: nodesDataset.length,
-			edges: _edges.length
+			edges: edgesDataset.length
 		};
 
 		createEvents();
@@ -263,15 +264,15 @@
 	}
 </script>
 
-<div id="network" class="h-full w-full"></div>
+<div id="network" class="w-full h-full"></div>
 
 <Exclude bind:this={exclude} on:start={main} to_exclude={fiftyplus.join(', ')} />
 
-<section class="h-full w-1/4 overflow-hidden shadow-default">
+<section class="w-1/4 h-full overflow-hidden shadow-default">
 	<input
 		type="text"
 		id="search"
-		class="relative w-full border-b-2 border-light bg-center bg-no-repeat py-4 pl-4 text-center font-sans text-xl outline-none"
+		class="relative w-full py-4 pl-4 font-sans text-xl text-center bg-center bg-no-repeat border-b-2 outline-none border-light"
 		style="background: url('/assets/search.svg') 12px 50% / 20pt no-repeat white;"
 		list="search-suggestions"
 		spellcheck="false"
@@ -302,7 +303,7 @@
 		{/if}
 
 		<!-- Title -->
-		<h1 class="mt-3 text-large font-bold">
+		<h1 class="mt-3 font-bold text-large">
 			<a
 				href="https://de.wikipedia.org/wiki/{encodeURIComponent(title.de.replaceAll(' ', '_'))}"
 				target="_blank">{title.de}</a
@@ -319,12 +320,12 @@
 		<p class="mb-8 text-grey">{description}</p>
 		{#if !introActive}
 			<div>
-				<h2 class="text-semilarge font-bold">
+				<h2 class="font-bold text-semilarge">
 					Episoden<span class=" ml-2.5 text-[80%] font-normal text-lightgrey"
 						>({episodes.length})</span
 					>
 				</h2>
-				<div class="mb-8 mt-2">
+				<div class="mt-2 mb-8">
 					<!-- Episodes -->
 					<div>
 						{#each episodes as episode}
@@ -333,14 +334,14 @@
 								href={episode.link}
 								target="_blank"
 							>
-								<div class="relative h-24 w-24 flex-shrink-0">
+								<div class="relative flex-shrink-0 w-24 h-24">
 									<img
-										class="h-full w-full rounded-l-lg object-cover"
+										class="object-cover w-full h-full rounded-l-lg"
 										src={episode.cover}
 										alt={episode.title}
 									/>
 									<span
-										class="absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform bg-black bg-opacity-50 px-2 py-1 text-center font-bold text-white"
+										class="absolute w-full px-2 py-1 font-bold text-center text-white transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 left-1/2 top-1/2"
 									>
 										{episode.nr}
 									</span>
@@ -354,7 +355,7 @@
 				</div>
 
 				<!-- Connections -->
-				<h2 class="mb-5 text-semilarge font-bold">
+				<h2 class="mb-5 font-bold text-semilarge">
 					Verbindungen<span class="ml-2.5 text-[80%] font-normal text-lightgrey"
 						>({Array.from(new Set(connectionsTo.concat(connectionsFrom))).length})</span
 					>
@@ -362,12 +363,12 @@
 				{#each ['to', 'from'] as connectionType}
 					<div>
 						{#if { to: connectionsTo, from: connectionsFrom }[connectionType].length > 0}
-							<h3 class="text-medium font-bold">
+							<h3 class="font-bold text-medium">
 								...{connectionType == 'to' ? 'zu' : 'von'} anderen Themen:
 							</h3>
 						{/if}
 						<div
-							class="mb-5 mt-2 flex flex-row flex-wrap content-between items-center justify-start"
+							class="flex flex-row flex-wrap items-center content-between justify-start mt-2 mb-5"
 						>
 							{#each { to: connectionsTo, from: connectionsFrom }[connectionType] as connection}
 								<button

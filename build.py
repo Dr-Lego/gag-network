@@ -389,13 +389,13 @@ def refresh_data():
 
     with open("frontend/src/lib/data/data.js", "w", encoding="utf-8") as f:
         f.write(
-            "const DATA = "
+            "export const DATA = "
             + json.dumps({"nodes": nodes, "edges": edges}, separators=(",", ":"))
         )
         f.close()
 
     with open("frontend/src/lib/data/meta.js", "w", encoding="utf-8") as f:
-        f.write("const META = " + json.dumps(meta, separators=(",", ":")))
+        f.write("export const META = " + json.dumps(meta, separators=(",", ":")))
         f.close()
 
     # clean up memory
@@ -485,7 +485,7 @@ def create_save():
     driver = webdriver.Chrome(options=options)
     for size, name in {1000: "full", 80: "small"}.items():
         driver.get(
-            f"file:///home/raphael/Programming/Projects/GAG/frontend/_preload.html?exclude={size}"
+           "file://" +  __file__.replace("build.py", f"frontend/_preload.html?exclude={size}")
         )
         progress = [0]
         iterations = 3000
@@ -499,7 +499,7 @@ def create_save():
     driver.quit()
 
     with open("frontend/src/lib/data/save.js", "w", encoding="utf-8") as f:
-        f.write("const SAVE = " + json.dumps(save, separators=(",", ":")))
+        f.write("export const SAVE = " + json.dumps(save, separators=(",", ":")))
         f.close()
 
 
