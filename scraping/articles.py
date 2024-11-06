@@ -21,19 +21,25 @@ from scraping._Index import Index
 index_de: Index
 index_en: Index
 
+
 def foo(f):
     """Execute a function and return its result."""
     return f()
+
 
 def none(*args):
     """Return None regardless of input."""
     return None
 
+
 def make_request(titles):
     """Make an API request to Wikipedia for language links."""
-    return json.loads(requests.get(
-        f"https://de.wikipedia.org/w/api.php?action=query&prop=langlinks&titles={'|'.join(titles)}&lllang=en&formatversion=2&lllimit=max&format=json&redirects="
-    ).text)["query"]
+    return json.loads(
+        requests.get(
+            f"https://de.wikipedia.org/w/api.php?action=query&prop=langlinks&titles={'|'.join(titles)}&lllang=en&formatversion=2&lllimit=max&format=json&redirects="
+        ).text
+    )["query"]
+
 
 def in_english(articles: list) -> list[dict]:
     """Get English translations and redirects for given articles."""
@@ -64,6 +70,7 @@ def in_english(articles: list) -> list[dict]:
 
     return [translations, redirects]
 
+
 def get_page(path: str, title: str, start_byte: int, end_byte: int):
     """Retrieve and parse a page from a Wikipedia dump file."""
     with open(path, "rb") as file:
@@ -75,6 +82,7 @@ def get_page(path: str, title: str, start_byte: int, end_byte: int):
     page = soup.find("title", string=title).parent
     return xmltodict.parse(str(page))["page"]
 
+
 def api_call(title: str):
     """Make an API call to Wikipedia's REST API for page summary."""
     r = json.loads(
@@ -84,6 +92,7 @@ def api_call(title: str):
         ).text
     )
     return r
+
 
 def scrape_articles(
     db=tuple[sqlite3.Cursor, sqlite3.Connection],
@@ -199,6 +208,7 @@ def scrape_articles(
                 ),
             )
 
+
             if iterations % 50 == 0:
                 db[1].commit()
 
@@ -209,6 +219,7 @@ def scrape_articles(
 
     wikidump_de.close()
     wikidump_en.close()
+
 
 def refresh_articles(mode: Literal["update", "refresh"] = "refresh") -> pd.DataFrame:
     """Refresh or update articles in the database."""
