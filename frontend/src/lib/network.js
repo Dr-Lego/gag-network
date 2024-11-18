@@ -42,7 +42,7 @@ class Network extends vis.Network {
 		if (id) {
 			this.selectEdges([id]);
 			const distance = this.nodeDistance(from, to);
-			const scale = Math.max(0.25, -0.000366703337 * distance + 1.383498349835);
+			const scale = (Math.min(window.innerHeight, window.innerWidth)-50) / distance;
 			this.moveTo({
 				position: this.averagePos(from, to),
 				scale,
