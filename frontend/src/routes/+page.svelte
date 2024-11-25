@@ -6,7 +6,7 @@
 	import { options } from '$lib/data/options.js';
 	import distance from 'jaro-winkler';
 	import vis from 'vis-network/dist/vis-network.min.js';
-	const MagnifyingGlass = new URL('/assets/search.svg', import.meta.url).href
+	const MagnifyingGlass = new URL('/assets/search.svg', import.meta.url).href;
 	import Network from '$lib/network.js';
 
 	let network;
@@ -16,6 +16,7 @@
 	let data;
 	let nodesDataset;
 	let edgesDataset;
+	let allEpisodes = {};
 	let exclude;
 	let stats = {
 		nodes: 0,
@@ -40,6 +41,7 @@
 	let episodes = [];
 	let searchSuggestions = [];
 	let searchTerm = '';
+	let searchEpisode = '';
 
 	let connectionCounts = Object.fromEntries(
 		SAVE.full.nodes.map(([id, connections]) => [id, (connections - 10) * 2])
@@ -141,24 +143,41 @@
 			.sort();
 	}
 
-	function search(term) {
-		term = term.toLowerCase();
-		const suggestionsWithSimilarity = searchSuggestions.map((suggestion) => [
-			suggestion,
-			distance(term, suggestion)
-		]);
-		const sortedSuggestions = suggestionsWithSimilarity.sort((a, b) => b[1] - a[1]);
-		const bestMatch = sortedSuggestions[0][0];
-
+	function selectNode(node) {
 		document.activeElement.blur();
-		showNodeInfo(nodesDataset.get(bestMatch));
-		network.selectNodes([bestMatch]);
+		showNodeInfo(nodesDataset.get(node));
+		network.selectNodes([node]);
 		network.neighbourhoodHighlight({
-			nodes: [bestMatch],
-			edges: network.getConnectedEdges(bestMatch)
+			nodes: [node],
+			edges: network.getConnectedEdges(node)
 		});
-		network.focusNode(bestMatch);
+		network.focusNode(node);
 		searchTerm = '';
+		searchEpisode = '';
+	}
+
+	function search(term) {
+		let bestMatch;
+		if (allEpisodes[term]) {
+			console.log(term);
+			console.log(allEpisodes[term]);
+			if (allEpisodes[term].length > 1) {
+				searchEpisode = term;
+			} else {
+				bestMatch = allEpisodes[term][0];
+			}
+		} else {
+			term = term.toLowerCase();
+			const suggestionsWithSimilarity = searchSuggestions.map((suggestion) => [
+				suggestion,
+				distance(term, suggestion)
+			]);
+			const sortedSuggestions = suggestionsWithSimilarity.sort((a, b) => b[1] - a[1]);
+			bestMatch = sortedSuggestions[0][0];
+		}
+		if (bestMatch) {
+			selectNode(bestMatch);
+		}
 	}
 
 	function connectionClicked(connection, type) {
@@ -223,6 +242,16 @@
 			});
 		}
 
+		for (const topic in META.episodes) {
+			META.episodes[topic].forEach((episode) => {
+				let name = episode.nr + ': ' + episode.title;
+				if (!allEpisodes[name]) {
+					allEpisodes[name] = [];
+				}
+				allEpisodes[name].push(topic);
+			});
+		}
+
 		return {
 			nodes: new vis.DataSet(nodes),
 			edges: new vis.DataSet(edges)
@@ -242,8 +271,6 @@
 
 		network = new Network(container, _data, options, edges);
 
-		console.log()
-
 		stats = {
 			nodes: nodesDataset.length,
 			edges: edgesDataset.length
@@ -252,7 +279,7 @@
 		createEvents();
 
 		// prepare search autocompletion
-		searchSuggestions = data.nodes.map((node) => node[0]);
+		searchSuggestions = [...data.nodes.map((node) => node[0]), ...Object.keys(allEpisodes)].sort();
 	}
 
 	function main(e) {
@@ -269,12 +296,37 @@
 
 <Exclude bind:this={exclude} on:start={main} to_exclude={fiftyplus.join(', ')} />
 
+<div
+	class="fixed {!searchEpisode
+		? 'pointer-events-none opacity-0'
+		: 'opacity-100'} left-0 top-0 z-50 flex h-full w-full items-center justify-center transition-all duration-300 ease-in-out"
+>
+	{#if searchEpisode}
+		<section class="bg-white border-2 border-light text-semilarge w-fit rounded-3xl p-14">
+			<h3 class="mb-5 font-bold">
+				<i>{searchEpisode}</i> behandelt folgende Themen:
+			</h3>
+			<div class="mt-8 leading-normal">
+				{#each allEpisodes[searchEpisode] as topic}
+					<button
+						class="hover:text-primary my-1 mr-2.5 w-fit cursor-pointer text-nowrap rounded-md bg-[rgb(245,245,245)] p-2 text-base text-black no-underline transition-all ease-in-out"
+						on:click={() => {
+							selectNode(topic);
+						}}
+						>{topic}
+					</button>
+				{/each}
+			</div>
+		</section>
+	{/if}
+</div>
+
 <section class="w-1/4 h-full overflow-hidden shadow-default">
 	<input
 		type="text"
 		id="search"
-		class="relative w-full py-4 pl-4 font-sans text-xl text-center bg-center bg-no-repeat border-b-2 outline-none border-light"
-		style='background: url("{MagnifyingGlass}") 12px 50% / 20pt no-repeat white;'
+		class="relative w-full py-4 pl-12 font-sans text-xl text-center bg-center bg-no-repeat border-b-2 outline-none border-light"
+		style="background: url('{MagnifyingGlass}') 12px 50% / 20pt no-repeat white;"
 		list="search-suggestions"
 		spellcheck="false"
 		placeholder="Finde ein Thema..."
@@ -310,7 +362,7 @@
 				target="_blank">{title.de}</a
 			>
 		</h1>
-		<h2 class="mb-2.5 text-semilarge font-bold text-grey">
+		<h2 class="text-semilarge text-grey mb-2.5 font-bold">
 			<a
 				href="https://en.wikipedia.org/wiki/{encodeURIComponent(title.en.replaceAll(' ', '_'))}"
 				target="_blank">{title.en}</a
@@ -322,7 +374,7 @@
 		{#if !introActive}
 			<div>
 				<h2 class="font-bold text-semilarge">
-					Episoden<span class=" ml-2.5 text-[80%] font-normal text-lightgrey"
+					Episoden<span class=" text-lightgrey ml-2.5 text-[80%] font-normal"
 						>({episodes.length})</span
 					>
 				</h2>
@@ -347,7 +399,7 @@
 										{episode.nr}
 									</span>
 								</div>
-								<span class="flex-grow p-2.5 text-black hover:text-primary hover:underline">
+								<span class="hover:text-primary flex-grow p-2.5 text-black hover:underline">
 									{episode.title}
 								</span>
 							</a>
@@ -357,7 +409,7 @@
 
 				<!-- Connections -->
 				<h2 class="mb-5 font-bold text-semilarge">
-					Verbindungen<span class="ml-2.5 text-[80%] font-normal text-lightgrey"
+					Verbindungen<span class="text-lightgrey ml-2.5 text-[80%] font-normal"
 						>({Array.from(new Set(connectionsTo.concat(connectionsFrom))).length})</span
 					>
 				</h2>
@@ -376,7 +428,7 @@
 									class="my-1 mr-2.5 w-fit cursor-pointer text-nowrap rounded-md bg-[rgb(245,245,245)] p-2 {activeConnection.name ==
 										connection && activeConnection.type == connectionType
 										? 'text-primary'
-										: ''} text-black no-underline transition-all ease-in-out hover:text-primary"
+										: ''} hover:text-primary text-black no-underline transition-all ease-in-out"
 									on:click={() => {
 										connectionClicked(connection, connectionType);
 									}}
@@ -395,9 +447,9 @@
 <div
 	class="absolute {infoActive
 		? 'pointer-events-auto opacity-100'
-		: 'pointer-events-none opacity-0'} bottom-0 left-0 h-fit w-1/5 cursor-default overflow-y-auto rounded-tr-2xl bg-white p-4 shadow-default transition-all ease-in-out"
+		: 'pointer-events-none opacity-0'} shadow-default bottom-0 left-0 h-fit w-1/5 cursor-default overflow-y-auto rounded-tr-2xl bg-white p-4 transition-all ease-in-out"
 >
-	<h3 class="mb-2.5 text-semilarge font-bold">
+	<h3 class="text-semilarge mb-2.5 font-bold">
 		<button
 			class="hover:text-primary hover:underline"
 			on:click={() => themeLinkClicked(context.title[0])}>{context.title[0]}</button
